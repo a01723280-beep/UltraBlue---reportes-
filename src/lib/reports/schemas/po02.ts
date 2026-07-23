@@ -1,0 +1,177 @@
+import { ReportDef } from "../types";
+import { LIST } from "../options";
+import { numOrNull } from "../util";
+
+const CONC_MIN = 31.8;
+const CONC_MAX = 33.2;
+
+export const po02: ReportDef = {
+  code: "PO-02",
+  title: "Reporte de proceso de mezclado de urea",
+  category: "operacion",
+  sections: [
+    {
+      id: "general",
+      title: "Información general",
+      fields: [
+        { id: "fecha", label: "Fecha", type: "date", required: true },
+        { id: "horaInicio", label: "Hora de inicio", type: "time", required: true },
+        { id: "horaFin", label: "Hora de finalización", type: "time", required: true },
+        {
+          id: "operador",
+          label: "Operador responsable",
+          type: "master-select",
+          listKey: LIST.operadores,
+          required: true,
+        },
+        {
+          id: "tanque",
+          label: "Tanque utilizado",
+          type: "master-select",
+          listKey: LIST.tanquesMezclado,
+          required: true,
+        },
+      ],
+    },
+    {
+      id: "materia-prima",
+      title: "Materia prima",
+      fields: [
+        {
+          id: "loteUrea",
+          label: "¿Qué lote de urea se utilizó?",
+          type: "master-select",
+          listKey: LIST.lotesUreaMateriaPrima,
+          required: true,
+        },
+        { id: "bolsasUtilizadas", label: "¿Cuántas bolsas se utilizaron?", type: "number", min: 0, required: true },
+        { id: "loteCompleto", label: "¿Se utilizó el lote completo?", type: "boolean", required: true },
+        {
+          id: "bolsasDisponibles",
+          label: "¿Cuántas bolsas quedaron disponibles?",
+          type: "number",
+          min: 0,
+          showIf: (v) => v.loteCompleto === false,
+          required: true,
+        },
+      ],
+    },
+    {
+      id: "agua",
+      title: "Agua",
+      fields: [
+        {
+          id: "tanqueAgua",
+          label: "¿Qué tanque de agua se utilizó?",
+          type: "master-select",
+          listKey: LIST.tanquesAguaCruda,
+          required: true,
+        },
+        { id: "m3Agua", label: "¿Cuántos m³ de agua se utilizaron?", type: "number", min: 0, unit: "m³", required: true },
+        { id: "temperaturaAgua", label: "Temperatura promedio del agua", type: "number", unit: "°C", required: true },
+      ],
+    },
+    {
+      id: "produccion",
+      title: "Producción",
+      fields: [
+        { id: "inicioCorrecto", label: "¿Se inició correctamente el mezclado?", type: "boolean", required: true },
+        {
+          id: "motivoNoInicio",
+          label: "Motivo",
+          type: "select",
+          options: [
+            "Falla de bomba",
+            "Falla de mixer",
+            "Falta de agua",
+            "Falta de urea",
+            "Falla eléctrica",
+            "Otro",
+          ].map((v) => ({ value: v, label: v })),
+          showIf: (v) => v.inicioCorrecto === false,
+          required: true,
+        },
+        { id: "tiempoMezclado", label: "Tiempo de mezclado", type: "number", unit: "min", min: 0 },
+      ],
+    },
+    {
+      id: "calidad",
+      title: "Calidad",
+      fields: [
+        { id: "concentracionObtenida", label: "Concentración obtenida", type: "number", unit: "%", required: true },
+        {
+          id: "concentracionCumple",
+          label: `¿La concentración cumple especificación (${CONC_MIN}–${CONC_MAX} %)?`,
+          type: "calculated",
+          calculate: (v) => {
+            const c = numOrNull(v.concentracionObtenida);
+            if (c === null) return null;
+            return c >= CONC_MIN && c <= CONC_MAX ? "Sí" : "No";
+          },
+          alertIf: (v) => {
+            const c = numOrNull(v.concentracionObtenida);
+            if (c === null) return null;
+            return c >= CONC_MIN && c <= CONC_MAX ? null : "⚠️ Concentración fuera de especificación.";
+          },
+        },
+        {
+          id: "ajusteRealizado",
+          label: "¿Qué ajuste se realizó?",
+          type: "select",
+          options: ["Agregar agua", "Agregar urea", "Recircular", "Otro"].map((v) => ({ value: v, label: v })),
+          showIf: (v) => {
+            const c = numOrNull(v.concentracionObtenida);
+            return c !== null && !(c >= CONC_MIN && c <= CONC_MAX);
+          },
+        },
+        {
+          id: "concentracionFinal",
+          label: "Concentración final",
+          type: "number",
+          unit: "%",
+          showIf: (v) => {
+            const c = numOrNull(v.concentracionObtenida);
+            return c !== null && !(c >= CONC_MIN && c <= CONC_MAX);
+          },
+        },
+        { id: "porcentajeUreaTanque", label: "% de urea en el tanque", type: "number", unit: "%", required: true },
+      ],
+    },
+    {
+      id: "muestreo",
+      title: "Muestreo",
+      fields: [
+        { id: "seTomoMuestra", label: "¿Se tomó muestra del lote?", type: "boolean", required: true },
+        {
+          id: "numeroMuestra",
+          label: "Número de muestra",
+          type: "auto-number",
+          showIf: (v) => v.seTomoMuestra === true,
+        },
+      ],
+    },
+    {
+      id: "observaciones",
+      title: "Observaciones",
+      fields: [
+        { id: "anomalia", label: "¿Se presentó alguna anomalía durante la producción?", type: "boolean", required: true },
+        {
+          id: "tipoAnomalia",
+          label: "Tipo de anomalía",
+          type: "select",
+          options: [
+            "Problema con el mixer",
+            "Problema con bomba",
+            "Problema con válvulas",
+            "Problema con agua",
+            "Problema con urea",
+            "Otro",
+          ].map((v) => ({ value: v, label: v })),
+          showIf: (v) => v.anomalia === true,
+          required: true,
+        },
+        { id: "comentarios", label: "Comentarios", type: "textarea" },
+      ],
+    },
+  ],
+};

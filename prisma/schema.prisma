@@ -1,0 +1,47 @@
+// Prisma schema for UltraBlue - Reportes de Planta
+//
+// Local development uses SQLite (zero setup). For Vercel production,
+// switch the datasource below to postgresql and set DATABASE_URL to a
+// Postgres connection string (see README.md "Desplegar en Vercel").
+//
+//   datasource db {
+//     provider = "postgresql"
+//     url      = env("DATABASE_URL")
+//   }
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A selectable option for a dropdown field, scoped to a plant + a field key
+// (e.g. plantId="cdmx", listKey="operadores", label="Jahaziel Escobedo").
+// Operators can add new options inline from the form ("agregar otro").
+model MasterListItem {
+  id        String   @id @default(cuid())
+  plantId   String
+  listKey   String
+  label     String
+  createdAt DateTime @default(now())
+
+  @@unique([plantId, listKey, label])
+  @@index([plantId, listKey])
+}
+
+// One filled-out report. `data` holds the full answer set as JSON, keyed by
+// field id, so the same table serves all 11 report types without a schema
+// migration every time a question changes.
+model ReportSubmission {
+  id         String   @id @default(cuid())
+  reportType String
+  plantId    String
+  operator   String?
+  data       Json
+  createdAt  DateTime @default(now())
+
+  @@index([plantId, reportType, createdAt])
+}
