@@ -350,7 +350,7 @@
                         exportBtn.disabled = count===0;
                         exportBtn.addEventListener('click', function(){ exportToExcel(state.plant, code); });
                         actions.appendChild(openBtn);
-                        actions.appendChild(exportBtn); const clearBtn=document.createElement('button'); clearBtn.className='btn btn-secondary'; clearBtn.textContent='Borrar registros'; clearBtn.disabled=count===0; clearBtn.addEventListener('click', function(){ if(confirm('Se borrarán los '+count+' registro(s) guardados de '+code+'. Esta acción no se puede deshacer. ¿Continuar?')){ clearRecords(state.plant, code); render(); } }); actions.appendChild(clearBtn);
+                        actions.appendChild(exportBtn);
                         card.appendChild(actions);
                         grid.appendChild(card);
                 });
