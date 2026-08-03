@@ -273,7 +273,7 @@
           localStorage.setItem(storageKeyRecords(plant, formId), JSON.stringify(records));
       }
 
-      function pad(n){return n.toString().padStart(2,'0');}
+      function clearRecords(plant, formId){ localStorage.removeItem(storageKeyRecords(plant, formId)); } function validateComplete(controls){ const missing = controls.filter(function(c){ if(c.field.label && c.field.label.indexOf('(opcional)')!==-1) return false; const v = c.getValue(); return v===undefined || v===null || v.toString().trim()===''; }); return missing; } function pad(n){return n.toString().padStart(2,'0');}
       function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
       function nowTimeStr(){ const d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); }
 
@@ -350,7 +350,7 @@
                         exportBtn.disabled = count===0;
                         exportBtn.addEventListener('click', function(){ exportToExcel(state.plant, code); });
                         actions.appendChild(openBtn);
-                        actions.appendChild(exportBtn);
+                        actions.appendChild(exportBtn); const clearBtn=document.createElement('button'); clearBtn.className='btn btn-secondary'; clearBtn.textContent='Borrar registros'; clearBtn.disabled=count===0; clearBtn.addEventListener('click', function(){ if(confirm('Se borraran los '+count+' registro(s) guardados de '+code+'. Esta accion no se puede deshacer. Continuar?')){ clearRecords(state.plant, code); render(); } }); actions.appendChild(clearBtn);
                         card.appendChild(actions);
                         grid.appendChild(card);
                 });
@@ -499,7 +499,7 @@
                 const actions = document.createElement('div'); actions.className='form-actions';
                 const saveBtn=document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='Guardar registro';
                 saveBtn.addEventListener('click', function(){
-                        const record={};
+                        const missing=validateComplete(controls); if(missing.length>0){ alert('Estas enviando un reporte incompleto. Debes completar todos los campos. Falta: '+missing.map(function(c){return c.field.label;}).join(', ')); return; } const record={};
                         controls.forEach(function(c){ record[c.field.label]=c.getValue(); });
                         saveRecord(state.plant, state.formId, record);
                         controls.forEach(function(c){
@@ -563,7 +563,7 @@
           const actions=document.createElement('div'); actions.className='form-actions';
           const saveBtn=document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='Guardar registro';
           saveBtn.addEventListener('click', function(){
-                if(!sel.value){ alert('Selecciona un equipo.'); return; }
+                if(!sel.value){ alert('Estas enviando un reporte incompleto. Selecciona un equipo.'); return; }
                 const eq=EQUIPOS_PC05[sel.value];
                 const record={
                         'Equipo':sel.value, 'Funcionamiento':eq.funcion,'Marca':eq.marca,'Serie':eq.serie,'Codigo interno':eq.codigo,
