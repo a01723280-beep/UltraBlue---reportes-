@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UltraBlue / UltraDef Mexico - Reportes Digitales</title>
+    <title>UltraBlue / UltraDef México - Reportes Digitales</title>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <style>
       :root{--blue:#1e3a8a;--blue-light:#2563eb;--gray:#f3f4f6;--red:#dc2626;--green:#16a34a;}
@@ -43,7 +43,7 @@
   </head>
   <body>
     <header>
-        <h1 id="headerTitle">UltraBlue / UltraDef Mexico</h1>
+        <h1 id="headerTitle">UltraBlue / UltraDef México</h1>
         <button id="homeBtn" style="display:none;">Inicio</button>
     </header>
     <div class="container" id="app"></div>
@@ -51,17 +51,17 @@
       const PLANTS = [
         {id:'monterrey', name:'UltraBlue Planta Monterrey'},
         {id:'hermosillo', name:'UltraBlue Planta Hermosillo'},
-        {id:'mexico', name:'UltraBlue Planta Mexico'}
+        {id:'mexico', name:'UltraBlue Planta México'}
         ];
-      const OPERADORES = ['Jahaziel Escobedo','Neder Escobedo','Francisco Oyervides','Martin Gonzalez','Santiago Cerda'];
+      const OPERADORES = ['Jahaziel Escobedo','Neder Escobedo','Francisco Oyervides','Martín González','Santiago Cerda'];
       const TANQUES = ['Tdef-1','Tdef-2','Tdef-3','Tdef-4'];
-      const INSTRUCTORES = ['Ing. Francisco Gonzalez','Jahaziel Escobedo'];
+      const INSTRUCTORES = ['Ing. Francisco González','Jahaziel Escobedo'];
       const EQUIPOS_PC05 = {
-         'Thermohigrometro': {funcion:'Medidor de temperatura y humedad', marca:'Huato', serie:'H23AIG064', codigo:'UDM-001'},
-         'Copa de Densidad': {funcion:'Medicion de peso especifico', marca:'Modern Instruments', serie:'NA', codigo:'UDM-002'},
-         'Medidor PH': {funcion:'Medir PH en solucion liquida', marca:'Atago', serie:'5028227', codigo:'UDM-003'},
-         'Refractometro': {funcion:'Medir concentracion de urea', marca:'Atago', serie:'SA914820', codigo:'UDM-004'},
-         'Bascula': {funcion:'Medir peso en gramos', marca:'Rhino', serie:'BAORE3-01979-0025', codigo:'UDM-005'}
+         'Termohigrómetro': {funcion:'Medidor de temperatura y humedad', marca:'Huato', serie:'H23AIG064', codigo:'UDM-001'},
+         'Copa de Densidad': {funcion:'Medición de peso específico', marca:'Modern Instruments', serie:'NA', codigo:'UDM-002'},
+         'Medidor PH': {funcion:'Medir PH en solución líquida', marca:'Atago', serie:'5028227', codigo:'UDM-003'},
+         'Refractómetro': {funcion:'Medir concentración de urea', marca:'Atago', serie:'SA914820', codigo:'UDM-004'},
+         'Báscula': {funcion:'Medir peso en gramos', marca:'Rhino', serie:'BAORE3-01979-0025', codigo:'UDM-005'}
       };
 
       const f = {
@@ -83,8 +83,8 @@
                 f.select('operador','Operador',OPERADORES),
                 f.dynamic('lote','No. de lote','lotes'),
                 f.select('tanqueAlmacenaje','Tanque de almacenaje',TANQUES),
-                f.yesno('contaminantesExt','Contaminantes (inspeccion externa)'),
-                f.select('inspInterna','Inspeccion visual interna',['Aprobado','No aprobado'])
+                f.yesno('contaminantesExt','Contaminantes (inspección externa)'),
+                f.select('inspInterna','Inspección visual interna',['Aprobado','No aprobado'])
               ];
           if(tipo==='Pipa'){
                 arr.push(f.yesno('certificadoRevisado','Certificado revisado'));
@@ -95,7 +95,7 @@
           }
           arr.push(f.dynamic('cliente','Cliente','clientes'));
           arr.push(f.number('litros','Litros o volumen cargado'));
-          if(tipo==='Tambor'||tipo==='Porron'){
+          if(tipo==='Tambor'||tipo==='Porrón'){
                 arr.push(f.number('unidadesEnvasadas','No. de unidades envasadas'));
           }
           arr.push(f.yesno('muestraTomada','Muestra tomada'));
@@ -103,18 +103,18 @@
       }
 
       const FORMS = {
-         'PO-01':{group:'PO', title:'Recepcion de Urea', fields:[
+         'PO-01':{group:'PO', title:'Recepción de Urea', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
                f.select('operador','Operador',OPERADORES),
                f.dynamic('lote','Lote No.','lotes'),
-               f.number('numOrden','Numero de Orden'),
+               f.number('numOrden','Número de Orden'),
                f.yesno('coaOk','Documentos coinciden con CoA'),
                f.yesno('ordenOk','Documentos coinciden con Orden'),
                f.select('estadoBolsa','Estado de bolsa',['Buena','Danada','Humeda']),
                f.yesno('bolsaAprobada','Bolsa aprobada'),
-               f.selectOther('colorInsp','Inspeccion visual - Color',['Blanco','Amarillento','Gris']),
+               f.selectOther('colorInsp','Inspección visual - Color',['Blanco','Amarillento','Gris']),
                f.yesno('colorAprobado','Color aprobado'),
-               f.selectOther('olorInsp','Inspeccion visual - Olor',['Sin olor','Amoniaco leve','Amoniaco fuerte','Vinagre']),
+               f.selectOther('olorInsp','Inspección visual - Olor',['Sin olor','Amoniaco leve','Amoniaco fuerte','Vinagre']),
                f.yesno('olorAprobado','Olor aprobado'),
                f.dynamic('proveedor','Proveedor','proveedores'),
                f.number('bolsasOrdenadas','No. de bolsas ordenadas'),
@@ -122,16 +122,16 @@
                f.yesno('loteAprobado','Lote aprobado'),
                f.yesno('muestraTomada','Muestra tomada')
             ]},
-         'PO-02':{group:'PO', title:'Recepcion e Inspeccion de Totes (IBC)', fields:[
+         'PO-02':{group:'PO', title:'Recepción e Inspección de Totes (IBC)', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
                f.select('operador','Operador',OPERADORES),
-               f.yesno('documentacionCompleta','Documentacion completa'),
+               f.yesno('documentacionCompleta','Documentación completa'),
                f.yesno('contaminantes','Contaminantes superficiales detectados'),
                f.number('totesOrdenados','No. de totes ordenados'),
                f.number('totesRecibidos','No. de totes recibidos'),
                f.number('totesRechazados','No. de totes rechazados')
             ]},
-         'PO-03':{group:'PO', title:'Produccion / Mezclado de Urea', fields:[
+         'PO-03':{group:'PO', title:'Producción / Mezclado de Urea', fields:[
                f.date('fecha','Fecha'), f.time('horaInicio','Hora inicio'), f.time('horaFinal','Hora final'),
                f.select('operador','Operador',OPERADORES),
                f.dynamic('loteMP','No. de lote materia prima','lotes'),
@@ -139,7 +139,7 @@
                f.text('loteProducido','No. de lote producido'),
                f.number('roAgua','RO Agua (m3)'),
                f.number('tempAgua','Temperatura promedio del agua'),
-               f.number('concentracionUrea','Concentracion de urea %',{min:31.8,max:33.2}),
+               f.number('concentraciónUrea','Concentración de urea %',{min:31.8,max:33.2}),
                f.number('ureaTanque','% Urea en tanque'),
                f.select('tanque','No. de tanque',TANQUES),
                f.yesno('muestraTomada','Muestra tomada')
@@ -147,39 +147,39 @@
          'PO-04':{group:'PO', title:'Envasado de Pipa', fields:envasadoFields('Pipa')},
          'PO-05':{group:'PO', title:'Envasado de Tote (IBC)', fields:envasadoFields('Tote')},
          'PO-06':{group:'PO', title:'Envasado de Tambor 200 Lts', fields:envasadoFields('Tambor')},
-         'PO-07':{group:'PO', title:'Envasado de Porron 20 Lts', fields:envasadoFields('Porron')},
+         'PO-07':{group:'PO', title:'Envasado de Porrón 20 Lts', fields:envasadoFields('Porrón')},
          'PO-08':{group:'PO', title:'Limpieza de Mixer', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
                f.select('operador','Operador',OPERADORES),
                f.yesno('t1','Limpieza de filtro Y (diario)'),
                f.yesno('t2','Mezclador libre de obstrucciones (diario)'),
-               f.yesno('t3','Revision de fugas en el sistema (diario)'),
+               f.yesno('t3','Revisión de fugas en el sistema (diario)'),
                f.yesno('t4','Eliminar fibras del tanque de Urea (diario)'),
                f.yesno('t5','Limpieza de tolva y Mixer (diario)'),
-               f.yesno('t6','Proceso de limpieza de maquina (semanal)'),
-               f.yesno('t7','Limpieza de serpentin interior (semanal)'),
+               f.yesno('t6','Proceso de limpieza de máquina (semanal)'),
+               f.yesno('t7','Limpieza de serpentín interior (semanal)'),
                f.yesno('t8','Limpieza de Conveyor (mensual)'),
-               f.yesno('t9','Inspeccion de tornillos y abrazaderas (mensual)'),
+               f.yesno('t9','Inspección de tornillos y abrazaderas (mensual)'),
                f.textarea('observaciones','Observaciones (opcional)')
             ]},
-         'PO-09':{group:'PO', title:'Control de Osmosis', fields:[
+         'PO-09':{group:'PO', title:'Control de Ósmosis', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
-               f.select('unidad','Unidad de Osmosis',['Osmosis 1','Osmosis 2']),
+               f.select('unidad','Unidad de Ósmosis',['Ósmosis 1','Ósmosis 2']),
                f.number('filtroZeolitaEntrada','Filtro Zeolita Entrada'),
                f.number('filtroZeolitaSalida','Filtro Zeolita Salida'),
-               f.number('filtroCarbonEntrada','Filtro Carbon Entrada'),
-               f.number('filtroCarbonSalida','Filtro Carbon Salida'),
-               f.number('presionPreFiltro','Presion Pre Filtro'),
-               f.number('presionPosFiltro','Presion Pos Filtro'),
-               f.number('presionAlimentacion','Presion de Alimentacion a Osmosis'),
-               f.number('presionRechazado','Presion de Rechazado de Osmosis'),
+               f.number('filtroCarbónEntrada','Filtro Carbón Entrada'),
+               f.number('filtroCarbónSalida','Filtro Carbón Salida'),
+               f.number('presionPreFiltro','Presión Pre Filtro'),
+               f.number('presionPosFiltro','Presión Pos Filtro'),
+               f.number('presionAlimentación','Presión de Alimentación a Ósmosis'),
+               f.number('presionRechazado','Presión de Rechazado de Ósmosis'),
                f.number('flujoProducto','Flujo de Producto'),
                f.number('flujoRechazo','Flujo de Rechazo'),
-               f.number('flujoRecirculacion','Flujo de Recirculacion'),
+               f.number('flujoRecirculación','Flujo de Recirculación'),
                f.number('durezaEntrada','Dureza de entrada a suavizador'),
                f.number('durezaSalida','Dureza de salida de suavizador'),
                f.number('ph','PH'),
-               f.number('conductividadAlim','Conductividad Alimentacion'),
+               f.number('conductividadAlim','Conductividad Alimentación'),
                f.number('conductividadProd','Conductividad de Producto')
             ]},
          'PO-10':{group:'PO', title:'Reporte de Entrenamiento', fields:[
@@ -187,45 +187,45 @@
                f.select('instructor','Instructor',INSTRUCTORES),
                f.multiFixed('trabajadores','Trabajador(es)',OPERADORES),
                f.text('tema','Tema'),
-               f.select('categoriaVerificacion','Verificacion de conocimiento',['Platica verbal','Entrenamiento en sitio','Lectura de manual','Evaluacion practica']),
-               f.textarea('detalleVerificacion','Detalle adicional (opcional)')
+               f.select('categoriaVerificación','Verificación de conocimiento',['Plática verbal','Entrenamiento en sitio','Lectura de manual','Evaluación práctica']),
+               f.textarea('detalleVerificación','Detalle adicional (opcional)')
             ]},
-         'PC-01':{group:'PC', title:'Recepcion de Urea (Calidad)', fields:[
+         'PC-01':{group:'PC', title:'Recepción de Urea (Calidad)', fields:[
                f.date('fecha','Fecha'),
                f.dynamic('lote','Lote No.','lotes'),
-               f.yesno('revisionCoA','Revision CoA'),
+               f.yesno('revisionCoA','Revisión CoA'),
                f.select('estadoBolsa','Estado de bolsa',['Buena','Danada','Humeda']),
-               f.select('aprobacionBolsa','Aprobacion bolsa',['Aprobado','No aprobado']),
-               f.selectOther('inspColor','Inspeccion Color',['Blanco','Amarillento','Gris']),
+               f.select('aprobacionBolsa','Aprobación bolsa',['Aprobado','No aprobado']),
+               f.selectOther('inspColor','Inspección Color',['Blanco','Amarillento','Gris']),
                f.select('aprobacionColor','Color aprobado',['Aprobado','No aprobado']),
-               f.selectOther('inspOlor','Inspeccion Olor',['Sin olor','Amoniaco leve','Amoniaco fuerte','Vinagre']),
+               f.selectOther('inspOlor','Inspección Olor',['Sin olor','Amoniaco leve','Amoniaco fuerte','Vinagre']),
                f.select('aprobacionOlor','Olor aprobado',['Aprobado','No aprobado']),
                f.number('numBolsas','No. de bolsas'),
-               f.yesno('muestraFisica20','Muestra fisica 20% tomada'),
+               f.yesno('muestraFísica20','Muestra física 20% tomada'),
                f.dynamic('laboratorio','Laboratorio','laboratorios'),
                f.select('resultado','Resultado',['Aprobado','Rechazado'])
             ]},
-         'PC-02':{group:'PC', title:'Aceptacion de Lote', fields:[
+         'PC-02':{group:'PC', title:'Aceptación de Lote', fields:[
                f.date('fecha','Fecha'),
                f.select('operador','Operador',OPERADORES),
-               f.dynamic('loteProduccion','No. de lote produccion','lotes'),
+               f.dynamic('loteProducción','No. de lote producción','lotes'),
                f.select('tanque','No. de tanque',TANQUES),
                f.number('ureaTanque','% Urea en tanque'),
-               f.number('ureaRefractometro','% Urea en refractometro',{min:31.8,max:33.2}),
-               f.number('medicionPH','Medicion PH',{min:9,max:10}),
-               f.number('pesoEspecifico','Peso especifico',{min:1.087,max:1.093}),
+               f.number('ureaRefractómetro','% Urea en refractómetro',{min:31.8,max:33.2}),
+               f.number('medicionPH','Medición PH',{min:9,max:10}),
+               f.number('pesoEspecífico','Peso específico',{min:1.087,max:1.093}),
                f.yesno('muestraPlanta','Muestra en Planta'),
                f.yesno('muestraLaboratorio','Muestra en Laboratorio')
             ]},
          'PC-03':{group:'PC', title:'Control de Muestras', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
                f.select('operador','Operador',OPERADORES),
-               f.dynamic('loteProduccion','No. de lote produccion','lotes'),
+               f.dynamic('loteProducción','No. de lote producción','lotes'),
                f.select('tanque','No. de tanque',TANQUES),
                f.number('porcentajeUrea','% Urea',{min:31.8,max:33.2}),
                f.dynamic('puntoMuestreo','Punto de muestreo','puntosMuestreo'),
-               f.date('fechaAnalisis','Fecha de analisis'),
-               f.select('envio','Envio interno/externo',['Interno','Externo']),
+               f.date('fechaAnálisis','Fecha de análisis'),
+               f.select('envío','Envío interno/externo',['Interno','Externo']),
                f.yesno('muestraTomada','Muestra tomada')
             ]},
          'PC-04':{group:'PC', title:'Producto No Conforme', fields:[
@@ -234,17 +234,17 @@
                f.select('tanque','No. de tanque',TANQUES),
                f.yesno('tanquePNCEtiquetado','Tanque PNC etiquetado'),
                f.date('fechaLlenadoEnvase','Fecha de llenado del envase'),
-               f.yesno('limpiezaTanque','Limpieza del tanque despues del PNC'),
+               f.yesno('limpiezaTanque','Limpieza del tanque después del PNC'),
                f.date('fechaEmpaque','Fecha de empaque'),
-               f.date('fechaEnvio','Fecha de envio'),
-               f.dynamic('lugarEnvio','Lugar de envio','lugaresEnvio')
+               f.date('fechaEnvío','Fecha de envío'),
+               f.dynamic('lugarEnvío','Lugar de envío','lugaresEnvío')
             ]},
-         'PC-05':{group:'PC', title:'Registro de Equipos (Calibracion)', fields:[]},
-         'PC-06':{group:'PC', title:'Acciones Correctivas', fields:[
+         'PC-05':{group:'PC', title:'Registro de Equipos (Calibración)', fields:[]},
+         'PC-06':{group:'PC', title:'Acciónes Correctivas', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
-               f.textarea('descripcionProblema','Descripcion del problema'),
-               f.textarea('accionCorrectiva','Accion correctiva/preventiva a implementar'),
-               f.date('fechaImplementacion','Fecha de implementacion')
+               f.textarea('descripcionProblema','Descripción del problema'),
+               f.textarea('acciónCorrectiva','Acción correctiva/preventiva a implementar'),
+               f.date('fechaImplementacion','Fecha de implementación')
             ]}
       };
 
@@ -292,7 +292,7 @@
       }
 
       function renderHome(){
-          headerTitle.textContent = 'UltraBlue / UltraDef Mexico';
+          headerTitle.textContent = 'UltraBlue / UltraDef México';
           const wrap = document.createElement('div');
           const h2 = document.createElement('h2');
           h2.textContent='Selecciona tu planta';
@@ -350,7 +350,7 @@
                         exportBtn.disabled = count===0;
                         exportBtn.addEventListener('click', function(){ exportToExcel(state.plant, code); });
                         actions.appendChild(openBtn);
-                        actions.appendChild(exportBtn); const clearBtn=document.createElement('button'); clearBtn.className='btn btn-secondary'; clearBtn.textContent='Borrar registros'; clearBtn.disabled=count===0; clearBtn.addEventListener('click', function(){ if(confirm('Se borraran los '+count+' registro(s) guardados de '+code+'. Esta accion no se puede deshacer. Continuar?')){ clearRecords(state.plant, code); render(); } }); actions.appendChild(clearBtn);
+                        actions.appendChild(exportBtn); const clearBtn=document.createElement('button'); clearBtn.className='btn btn-secondary'; clearBtn.textContent='Borrar registros'; clearBtn.disabled=count===0; clearBtn.addEventListener('click', function(){ if(confirm('Se borrarán los '+count+' registro(s) guardados de '+code+'. Esta acción no se puede deshacer. ¿Continuar?')){ clearRecords(state.plant, code); render(); } }); actions.appendChild(clearBtn);
                         card.appendChild(actions);
                         grid.appendChild(card);
                 });
@@ -361,7 +361,7 @@
 
       function exportToExcel(plant, formId){
           const records = getRecords(plant, formId);
-          if(records.length===0){ alert('No hay registros guardados para este reporte todavia.'); return; }
+          if(records.length===0){ alert('No hay registros guardados para este reporte todavía.'); return; }
           const ws = XLSX.utils.json_to_sheet(records);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, formId);
@@ -474,7 +474,7 @@
 
           const back = document.createElement('button');
           back.className='back-link';
-          back.textContent='<- Volver al menu de reportes';
+          back.textContent='<- Volver al menú de reportes';
           back.addEventListener('click', function(){ state={view:'menu',plant:state.plant,formId:null}; render(); });
           wrap.appendChild(back);
 
@@ -499,7 +499,7 @@
                 const actions = document.createElement('div'); actions.className='form-actions';
                 const saveBtn=document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='Guardar registro';
                 saveBtn.addEventListener('click', function(){
-                        const missing=validateComplete(controls); if(missing.length>0){ alert('Estas enviando un reporte incompleto. Debes completar todos los campos. Falta: '+missing.map(function(c){return c.field.label;}).join(', ')); return; } const record={};
+                        const missing=validateComplete(controls); if(missing.length>0){ alert('Estás enviando un reporte incompleto. Debes completar todos los campos. Falta: '+missing.map(function(c){return c.field.label;}).join(', ')); return; } const record={};
                         controls.forEach(function(c){ record[c.field.label]=c.getValue(); });
                         saveRecord(state.plant, state.formId, record);
                         controls.forEach(function(c){
@@ -532,13 +532,13 @@
           formEl.appendChild(infoBox);
 
           const fechaCalWrap=document.createElement('div'); fechaCalWrap.className='form-field';
-          const fechaCalLabel=document.createElement('label'); fechaCalLabel.textContent='Fecha de calibracion';
+          const fechaCalLabel=document.createElement('label'); fechaCalLabel.textContent='Fecha de calibración';
           const fechaCalInput=document.createElement('input'); fechaCalInput.type='date'; fechaCalInput.value=todayStr();
           fechaCalWrap.appendChild(fechaCalLabel); fechaCalWrap.appendChild(fechaCalInput);
           formEl.appendChild(fechaCalWrap);
 
           const fechaRecalWrap=document.createElement('div'); fechaRecalWrap.className='form-field';
-          const fechaRecalLabel=document.createElement('label'); fechaRecalLabel.textContent='Fecha de recalibracion (calculada: +3 anios)';
+          const fechaRecalLabel=document.createElement('label'); fechaRecalLabel.textContent='Fecha de recalibración (calculada: +3 años)';
           const fechaRecalBox=document.createElement('div'); fechaRecalBox.className='readonly-box';
           fechaRecalWrap.appendChild(fechaRecalLabel); fechaRecalWrap.appendChild(fechaRecalBox);
           formEl.appendChild(fechaRecalWrap);
@@ -556,18 +556,18 @@
                 const eq=EQUIPOS_PC05[sel.value];
                 if(eq){
                         infoBox.style.display='block';
-                        infoBox.innerHTML = '<b>Funcionamiento:</b> '+eq.funcion+'<br><b>Marca:</b> '+eq.marca+'<br><b>Serie:</b> '+eq.serie+'<br><b>Codigo interno:</b> '+eq.codigo;
+                        infoBox.innerHTML = '<b>Funcionamiento:</b> '+eq.funcion+'<br><b>Marca:</b> '+eq.marca+'<br><b>Serie:</b> '+eq.serie+'<br><b>Código interno:</b> '+eq.codigo;
                 } else { infoBox.style.display='none'; }
           });
 
           const actions=document.createElement('div'); actions.className='form-actions';
           const saveBtn=document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='Guardar registro';
           saveBtn.addEventListener('click', function(){
-                if(!sel.value){ alert('Estas enviando un reporte incompleto. Selecciona un equipo.'); return; }
+                if(!sel.value){ alert('Estás enviando un reporte incompleto. Selecciona un equipo.'); return; }
                 const eq=EQUIPOS_PC05[sel.value];
                 const record={
-                        'Equipo':sel.value, 'Funcionamiento':eq.funcion,'Marca':eq.marca,'Serie':eq.serie,'Codigo interno':eq.codigo,
-                        'Fecha de calibracion':fechaCalInput.value, 'Fecha de recalibracion':fechaRecalBox.textContent
+                        'Equipo':sel.value, 'Funcionamiento':eq.funcion,'Marca':eq.marca,'Serie':eq.serie,'Código interno':eq.codigo,
+                        'Fecha de calibración':fechaCalInput.value, 'Fecha de recalibración':fechaRecalBox.textContent
                 };
                 saveRecord(state.plant,'PC-05',record);
                 banner.style.display='block';
