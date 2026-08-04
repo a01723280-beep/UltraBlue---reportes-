@@ -249,7 +249,7 @@
       };
 
 
-      let state = { view:'home', plant:null, formId:null };
+      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzRV6q0PC1A5QXf7REcCFKGczjKcKXur6c_BvnWsOb5-nPstnpqxarTToUdNW4ukMo/exec'; let state = { view:'home', plant:null, formId:null };
 
       function storageKeyRecords(plant, formId){ return 'ub_'+plant+'_records_'+formId; }
       function storageKeyList(plant, listKey){ return 'ub_'+plant+'_list_'+listKey; }
@@ -270,10 +270,10 @@
       function saveRecord(plant, formId, record){
           const records = getRecords(plant, formId);
           records.push(record);
-          localStorage.setItem(storageKeyRecords(plant, formId), JSON.stringify(records));
+          localStorage.setItem(storageKeyRecords(plant, formId), JSON.stringify(records)); sendToCloud(plant, formId, record);
       }
 
-      function clearRecords(plant, formId){ localStorage.removeItem(storageKeyRecords(plant, formId)); } function validateComplete(controls){ const missing = controls.filter(function(c){ if(c.field.label && c.field.label.indexOf('(opcional)')!==-1) return false; const v = c.getValue(); return v===undefined || v===null || v.toString().trim()===''; }); return missing; } function pad(n){return n.toString().padStart(2,'0');}
+      function clearRecords(plant, formId){ localStorage.removeItem(storageKeyRecords(plant, formId)); } function sendToCloud(plant, formId, record){ try{ fetch(APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({plant:plant, reportCode:formId, record:record})}); }catch(e){} } function validateComplete(controls){ const missing = controls.filter(function(c){ if(c.field.label && c.field.label.indexOf('(opcional)')!==-1) return false; const v = c.getValue(); return v===undefined || v===null || v.toString().trim()===''; }); return missing; } function pad(n){return n.toString().padStart(2,'0');}
       function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
       function nowTimeStr(){ const d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); }
 
