@@ -138,7 +138,7 @@
                f.number('bolsasUsadas','Cantidad de bolsas usadas'),
                f.text('loteProducido','No. de lote producido'),
                f.number('roAgua','RO Agua (m3)'),
-               f.number('tempAgua','Temperatura promedio del agua'),
+               f.number('tempAgua','Temperatura promedio del agua',{min:38, popupAlert:'El agua no está dentro del rango de temperatura (mínimo 38°C).'}),
                f.number('concentraciónUrea','Concentración de urea %',{min:31.8,max:33.2}),
                f.number('ureaTanque','% Urea en tanque'),
                f.select('tanque','No. de tanque',TANQUES),
@@ -165,8 +165,6 @@
          'PO-09':{group:'PO', title:'Control de Ósmosis', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
                f.select('unidad','Unidad de Ósmosis',['Ósmosis 1','Ósmosis 2']),
-               f.number('filtroZeolitaEntrada','Filtro Zeolita Entrada'),
-               f.number('filtroZeolitaSalida','Filtro Zeolita Salida'),
                f.number('filtroCarbónEntrada','Filtro Carbón Entrada'),
                f.number('filtroCarbónSalida','Filtro Carbón Salida'),
                f.number('presionPreFiltro','Presión Pre Filtro'),
@@ -396,16 +394,25 @@
           } else if(field.type==='number'){
                 const input=document.createElement('input'); input.type='number'; input.step='any';
                 wrap.appendChild(input);
-                if(field.min!==undefined && field.max!==undefined){
+                if(field.min!==undefined || field.max!==undefined){
                         const alertEl=document.createElement('div');
                         alertEl.className='alert-range';
-                        alertEl.textContent='Fuera de rango ('+field.min+' - '+field.max+')';
+                        if(field.min!==undefined && field.max!==undefined){ alertEl.textContent='Fuera de rango ('+field.min+' - '+field.max+')'; }
+                        else if(field.min!==undefined){ alertEl.textContent='Por debajo del mínimo permitido ('+field.min+')'; }
+                        else { alertEl.textContent='Por encima del máximo permitido ('+field.max+')'; }
                         wrap.appendChild(alertEl);
+                        let alerted=false;
+                        function outOfRange(v){ return !isNaN(v) && ((field.min!==undefined && v<field.min) || (field.max!==undefined && v>field.max)); }
                         input.addEventListener('input', function(){
                                   const v=parseFloat(input.value);
-                                  if(!isNaN(v) && (v<field.min || v>field.max)) alertEl.style.display='block';
-                                  else alertEl.style.display='none';
+                                  if(outOfRange(v)){ alertEl.style.display='block'; } else { alertEl.style.display='none'; alerted=false; }
                         });
+                        if(field.popupAlert){
+                                  input.addEventListener('change', function(){
+                                            const v=parseFloat(input.value);
+                                            if(outOfRange(v) && !alerted){ alert(field.popupAlert); alerted=true; }
+                                  });
+                        }
                 }
                 getValue=function(){return input.value;};
           } else if(field.type==='select'){
