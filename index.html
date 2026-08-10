@@ -606,15 +606,22 @@
 
       const fotoWrap=document.createElement('div'); fotoWrap.className='form-field';
       const fotoLabel=document.createElement('label'); fotoLabel.textContent='Evidencia fotográfica';
-      const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.accept='image/*'; fileInput.setAttribute('capture','environment');
+      const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.accept='image/*'; fileInput.setAttribute('capture','environment'); fileInput.style.display='none';
+      const camBtn=document.createElement('button'); camBtn.type='button'; camBtn.className='btn btn-secondary'; camBtn.style.display='inline-flex'; camBtn.style.alignItems='center'; camBtn.style.gap='8px';
+      const camIcon=document.createElement('span'); camIcon.textContent='📷'; camIcon.style.fontSize='20px'; camIcon.style.lineHeight='1';
+      const camText=document.createElement('span'); camText.textContent='Tomar / Subir foto';
+      camBtn.appendChild(camIcon); camBtn.appendChild(camText);
+      camBtn.addEventListener('click', function(){ fileInput.click(); });
+      const fileNameLabel=document.createElement('div'); fileNameLabel.style.marginTop='6px'; fileNameLabel.style.fontSize='13px'; fileNameLabel.style.color='#374151';
       const preview=document.createElement('img'); preview.style.maxWidth='220px'; preview.style.display='none'; preview.style.marginTop='8px'; preview.style.borderRadius='6px'; preview.style.border='1px solid #ccc';
-      fotoWrap.appendChild(fotoLabel); fotoWrap.appendChild(fileInput); fotoWrap.appendChild(preview);
+      fotoWrap.appendChild(fotoLabel); fotoWrap.appendChild(camBtn); fotoWrap.appendChild(fileNameLabel); fotoWrap.appendChild(fileInput); fotoWrap.appendChild(preview);
       formEl.appendChild(fotoWrap);
-
-      let photoData='';
-      fileInput.addEventListener('change', function(){
+      
+            let photoData='';
+            fileInput.addEventListener('change', function(){
         const file=fileInput.files[0];
-        if(!file){ photoData=''; preview.style.display='none'; return; }
+        if(!file){ photoData=''; preview.style.display='none'; fileNameLabel.textContent=''; return; }
+        fileNameLabel.textContent='✓ '+file.name;
         const reader=new FileReader();
         reader.onload=function(ev){
           const img=new Image();
