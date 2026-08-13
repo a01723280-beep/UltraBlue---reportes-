@@ -74,7 +74,8 @@
           selectOther:(key,label,options)=>({key,label,type:'selectOther',options}),
           yesno:(key,label)=>({key,label,type:'yesno'}),
           dynamic:(key,label,listKey)=>({key,label,type:'dynamic',listKey}),
-          multiFixed:(key,label,options)=>({key,label,type:'multiFixed',options})
+          multiFixed:(key,label,options)=>({key,label,type:'multiFixed',options}),
+          toteReject:(key,label)=>({key,label,type:'toteReject'})
       };
 
       function envasadoFields(tipo){
@@ -126,10 +127,9 @@
                f.date('fecha','Fecha'), f.time('hora','Hora'),
                f.select('operador','Operador',OPERADORES),
                f.yesno('documentacionCompleta','Documentación completa'),
-               f.yesno('contaminantes','Contaminantes superficiales detectados'),
                f.number('totesOrdenados','No. de totes ordenados'),
                f.number('totesRecibidos','No. de totes recibidos'),
-               f.number('totesRechazados','No. de totes rechazados')
+               f.toteReject('totesRechazados','No. de totes rechazados')
             ]},
          'PO-03':{group:'PO', title:'Producción / Mezclado de Urea', fields:[
                f.date('fecha','Fecha'), f.time('horaInicio','Hora inicio'), f.time('horaFinal','Hora final'),
@@ -139,8 +139,8 @@
                f.text('loteProducido','No. de lote producido'),
                f.number('roAgua','RO Agua (m3)'),
                f.number('tempAgua','Temperatura promedio del agua',{min:38, popupAlert:'El agua no está dentro del rango de temperatura (mínimo 38°C).'}),
-               f.number('concentraciónUrea','Concentración de urea %',{min:31.8,max:33.2}),
-               f.number('ureaTanque','% Urea en tanque'),
+               f.number('concentraciónUrea','% en máquina',{min:31.8,max:33.2}),
+               f.number('ureaTanque','Concentración de producto %',{min:32.2,max:32.6,popupAlert:'Valor fuera de rango permitido para Concentración de producto % (32.2 - 32.6).'}),
                f.select('tanque','No. de tanque',TANQUES),
                f.yesno('muestraTomada','Muestra tomada')
             ]},
@@ -182,7 +182,7 @@
             ]},
          'PO-10':{group:'PO', title:'Reporte de Entrenamiento', fields:[
                f.date('fecha','Fecha'),
-               f.select('instructor','Instructor',INSTRUCTORES),
+               f.selectOther('instructor','Instructor',INSTRUCTORES),
                f.multiFixed('trabajadores','Trabajador(es)',OPERADORES),
                f.text('tema','Tema'),
                f.select('categoriaVerificación','Verificación de conocimiento',['Plática verbal','Entrenamiento en sitio','Lectura de manual','Evaluación práctica']),
@@ -208,20 +208,21 @@
                f.select('operador','Operador',OPERADORES),
                f.dynamic('loteProducción','No. de lote producción','lotes'),
                f.select('tanque','No. de tanque',TANQUES),
-               f.number('ureaTanque','% Urea en tanque'),
+               f.number('ureaTanque','Concentración de producto %'),
                f.number('ureaRefractómetro','% Urea en refractómetro',{min:31.8,max:33.2}),
                f.number('medicionPH','Medición PH',{min:9,max:10}),
-               f.number('pesoEspecífico','Peso específico',{min:1.087,max:1.093}),
+               f.number('pesoEspecífico','Peso específico',{min:1.3814,max:1.3843,popupAlert:'Valor fuera de rango permitido para Peso específico (1.3814 - 1.3843).'}),
                f.yesno('muestraPlanta','Muestra en Planta'),
-               f.yesno('muestraLaboratorio','Muestra en Laboratorio')
+               f.yesno('muestraLaboratorio','Muestra en Laboratorio'),
+               f.yesno('aprobadoLaboratorio','Aprobado de laboratorio')
             ]},
          'PC-03':{group:'PC', title:'Control de Muestras', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
                f.select('operador','Operador',OPERADORES),
                f.dynamic('loteProducción','No. de lote producción','lotes'),
                f.select('tanque','No. de tanque',TANQUES),
-               f.number('porcentajeUrea','% Urea',{min:31.8,max:33.2}),
-               f.dynamic('puntoMuestreo','Punto de muestreo','puntosMuestreo'),
+               f.number('porcentajeUrea','Concentración de producto %',{min:31.8,max:33.2}),
+               f.selectOther('puntoMuestreo','Punto de muestreo',['PM-01']),
                f.date('fechaAnálisis','Fecha de análisis'),
                f.select('envío','Envío interno/externo',['Interno','Externo']),
                f.yesno('muestraTomada','Muestra tomada')
@@ -266,7 +267,7 @@
           localStorage.setItem(storageKeyRecords(plant, formId), JSON.stringify(records)); sendToCloud(plant, formId, record);
       }
 
-      function clearRecords(plant, formId){ localStorage.removeItem(storageKeyRecords(plant, formId)); } function sendToCloud(plant, formId, record){ try{ fetch(APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({plant:plant, reportCode:formId, record:record})}); }catch(e){} } function validateComplete(controls){ const missing = controls.filter(function(c){ if(c.field.label && c.field.label.indexOf('(opcional)')!==-1) return false; const v = c.getValue(); return v===undefined || v===null || v.toString().trim()===''; }); return missing; } function pad(n){return n.toString().padStart(2,'0');}
+      function clearRecords(plant, formId){ localStorage.removeItem(storageKeyRecords(plant, formId)); } function sendToCloud(plant, formId, record){ try{ fetch(APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({plant:plant, reportCode:formId, record:record})}); }catch(e){} } function validateComplete(controls){ const missing = controls.filter(function(c){ if(c.field.label && c.field.label.indexOf('(opcional)')!==-1) return false; const v = c.getValue(); if(v && typeof v==='object' && v.__multi){ if(v.main===undefined || v.main===null || v.main.toString().trim()==='') return true; const extraVals=Object.keys(v.extra||{}).map(function(k){return v.extra[k];}); return extraVals.some(function(ev){ return ev===undefined||ev===null||ev.toString().trim()===''; }); } return v===undefined || v===null || v.toString().trim()===''; }); return missing; } function pad(n){return n.toString().padStart(2,'0');}
       function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
       function nowTimeStr(){ const d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); }
 
@@ -459,6 +460,33 @@
                 });
                 wrap.appendChild(div);
                 getValue=function(){ return checks.filter(function(c){return c.checked;}).map(function(c){return c.value;}).join(', '); };
+          } else if(field.type==='toteReject'){
+                const input=document.createElement('input'); input.type='number'; input.step='1'; input.min='0';
+                wrap.appendChild(input);
+                const reasonsContainer=document.createElement('div'); reasonsContainer.className='tote-reasons';
+                wrap.appendChild(reasonsContainer);
+                let reasonInputs=[];
+                function rebuildReasons(){
+                      const n=Math.max(0, parseInt(input.value,10)||0);
+                      const oldValues=reasonInputs.map(function(r){return r.value;});
+                      reasonsContainer.innerHTML='';
+                      reasonInputs=[];
+                      for(let i=0;i<n;i++){
+                            const rWrap=document.createElement('div'); rWrap.className='form-field';
+                            const rLabel=document.createElement('label'); rLabel.textContent='Motivo de rechazo - Tote '+(i+1);
+                            const rInput=document.createElement('textarea'); rInput.rows=2;
+                            if(oldValues[i]) rInput.value=oldValues[i];
+                            rWrap.appendChild(rLabel); rWrap.appendChild(rInput);
+                            reasonsContainer.appendChild(rWrap);
+                            reasonInputs.push(rInput);
+                      }
+                }
+                input.addEventListener('input', rebuildReasons);
+                getValue=function(){
+                      const extra={};
+                      reasonInputs.forEach(function(r,i){ extra['Motivo de rechazo - Tote '+(i+1)]=r.value; });
+                      return {__multi:true, main:input.value, extra:extra};
+                };
           } else {
                 const input=document.createElement('input'); input.type='text';
                 wrap.appendChild(input);
@@ -504,7 +532,7 @@
                 const saveBtn=document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='Guardar registro';
                 saveBtn.addEventListener('click', function(){
                         const missing=validateComplete(controls); if(missing.length>0){ alert('Estás enviando un reporte incompleto. Debes completar todos los campos. Falta: '+missing.map(function(c){return c.field.label;}).join(', ')); return; } const record={};
-                        controls.forEach(function(c){ record[c.field.label]=c.getValue(); });
+                        controls.forEach(function(c){ const v=c.getValue(); if(v && typeof v==='object' && v.__multi){ record[c.field.label]=v.main; Object.keys(v.extra||{}).forEach(function(k){ record[k]=v.extra[k]; }); } else { record[c.field.label]=v; } });
                         saveRecord(state.plant, state.formId, record);
                         controls.forEach(function(c){
                                   if(c.field.type==='dynamic'){ addToList(state.plant, c.field.listKey, c.getValue()); }
@@ -547,6 +575,34 @@
           fechaRecalWrap.appendChild(fechaRecalLabel); fechaRecalWrap.appendChild(fechaRecalBox);
           formEl.appendChild(fechaRecalWrap);
 
+          const calPlantaWrap=document.createElement('div'); calPlantaWrap.className='form-field';
+          const calPlantaLabel=document.createElement('label'); calPlantaLabel.textContent='Calibración en planta';
+          const calPlantaDiv=document.createElement('div'); calPlantaDiv.className='yesno';
+          const calPlantaName='calPlanta_'+Math.random().toString(36).slice(2);
+          const calPlantaRadios=[];
+          ['Si','No'].forEach(function(opt){
+                const l=document.createElement('label');
+                const r=document.createElement('input'); r.type='radio'; r.name=calPlantaName; r.value=opt;
+                calPlantaRadios.push(r);
+                l.appendChild(r); l.appendChild(document.createTextNode(opt));
+                calPlantaDiv.appendChild(l);
+          });
+          calPlantaWrap.appendChild(calPlantaLabel); calPlantaWrap.appendChild(calPlantaDiv);
+          formEl.appendChild(calPlantaWrap);
+
+          const lugarCalWrap=document.createElement('div'); lugarCalWrap.className='form-field'; lugarCalWrap.style.display='none';
+          const lugarCalLabel=document.createElement('label'); lugarCalLabel.textContent='Lugar de calibración';
+          const lugarCalInput=document.createElement('input'); lugarCalInput.type='text';
+          lugarCalWrap.appendChild(lugarCalLabel); lugarCalWrap.appendChild(lugarCalInput);
+          formEl.appendChild(lugarCalWrap);
+
+          function updateLugarCalVisibility(){
+                const chosen=calPlantaRadios.find(function(r){return r.checked;});
+                lugarCalWrap.style.display=(chosen && chosen.value==='No') ? 'block' : 'none';
+          }
+          calPlantaRadios.forEach(function(r){ r.addEventListener('change', updateLugarCalVisibility); });
+          updateLugarCalVisibility();
+
           function updateRecal(){
                 if(!fechaCalInput.value){ fechaRecalBox.textContent='-'; return; }
                 const d=new Date(fechaCalInput.value+'T00:00:00');
@@ -568,10 +624,14 @@
           const saveBtn=document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='Guardar registro';
           saveBtn.addEventListener('click', function(){
                 if(!sel.value){ alert('Estás enviando un reporte incompleto. Selecciona un equipo.'); return; }
+                const calPlantaChosen=calPlantaRadios.find(function(r){return r.checked;});
+                if(!calPlantaChosen){ alert('Estás enviando un reporte incompleto. Selecciona si la calibración fue en planta.'); return; }
+                if(calPlantaChosen.value==='No' && !lugarCalInput.value.trim()){ alert('Estás enviando un reporte incompleto. Especifica el lugar de calibración.'); return; }
                 const eq=EQUIPOS_PC05[sel.value];
                 const record={
                         'Equipo':sel.value, 'Funcionamiento':eq.funcion,'Marca':eq.marca,'Serie':eq.serie,'Código interno':eq.codigo,
-                        'Fecha de calibración':fechaCalInput.value, 'Fecha de recalibración':fechaRecalBox.textContent
+                        'Fecha de calibración':fechaCalInput.value, 'Fecha de recalibración':fechaRecalBox.textContent,
+                        'Calibración en planta':calPlantaChosen.value, 'Lugar de calibración':(calPlantaChosen.value==='No'?lugarCalInput.value:'')
                 };
                 saveRecord(state.plant,'PC-05',record);
                 banner.style.display='block';
