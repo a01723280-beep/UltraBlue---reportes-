@@ -118,7 +118,8 @@
           yesno:(key,label)=>({key,label,type:'yesno'}),
           dynamic:(key,label,listKey)=>({key,label,type:'dynamic',listKey}),
           multiFixed:(key,label,options)=>({key,label,type:'multiFixed',options}),
-          toteReject:(key,label)=>({key,label,type:'toteReject'})
+          toteReject:(key,label)=>({key,label,type:'toteReject'}),
+          photo:(key,label)=>({key,label,type:'photo'})
       };
 
       function envasadoFields(tipo){
@@ -143,6 +144,7 @@
                 arr.push(f.number('unidadesEnvasadas','No. de unidades envasadas'));
           }
           arr.push(f.yesno('muestraTomada','Muestra tomada'));
+          arr.push(f.photo('evidenciaFoto','Evidencia fotográfica'));
           return arr;
       }
 
@@ -164,7 +166,8 @@
                f.number('bolsasOrdenadas','No. de bolsas ordenadas'),
                f.number('bolsasRecibidas','No. de bolsas recibidas'),
                f.yesno('loteAprobado','Lote aprobado'),
-               f.yesno('muestraTomada','Muestra tomada')
+               f.yesno('muestraTomada','Muestra tomada'),
+               f.photo('evidenciaFoto','Evidencia fotográfica')
             ]},
          'PO-02':{group:'PO', title:'Recepción e Inspección de Totes (IBC)', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
@@ -172,7 +175,8 @@
                f.yesno('documentacionCompleta','Documentación completa'),
                f.number('totesOrdenados','No. de totes ordenados'),
                f.number('totesRecibidos','No. de totes recibidos'),
-               f.toteReject('totesRechazados','No. de totes rechazados')
+               f.toteReject('totesRechazados','No. de totes rechazados'),
+               f.photo('evidenciaFoto','Evidencia fotográfica')
             ]},
          'PO-03':{group:'PO', title:'Producción / Mezclado de Urea', fields:[
                f.date('fecha','Fecha'), f.time('horaInicio','Hora inicio'), f.time('horaFinal','Hora final'),
@@ -185,7 +189,8 @@
                f.number('concentraciónUrea','% en máquina',{min:31.8,max:33.2}),
                f.number('ureaTanque','Concentración de producto %',{min:32.2,max:32.6,popupAlert:'Valor fuera de rango permitido para Concentración de producto % (32.2 - 32.6).'}),
                f.select('tanque','No. de tanque',TANQUES),
-               f.yesno('muestraTomada','Muestra tomada')
+               f.yesno('muestraTomada','Muestra tomada'),
+               f.photo('evidenciaFoto','Evidencia fotográfica (opcional)')
             ]},
          'PO-04':{group:'PO', title:'Envasado de Pipa', fields:envasadoFields('Pipa')},
          'PO-05':{group:'PO', title:'Envasado de Tote (IBC)', fields:envasadoFields('Tote')},
@@ -244,7 +249,8 @@
                f.number('numBolsas','No. de bolsas'),
                f.yesno('muestraFísica20','Muestra física 20% tomada'),
                f.dynamic('laboratorio','Laboratorio','laboratorios'),
-               f.select('resultado','Resultado',['Aprobado','Rechazado'])
+               f.select('resultado','Resultado',['Aprobado','Rechazado']),
+               f.photo('evidenciaFoto','Evidencia fotográfica')
             ]},
          'PC-02':{group:'PC', title:'Aceptación de Lote', fields:[
                f.date('fecha','Fecha'),
@@ -257,7 +263,8 @@
                f.number('pesoEspecífico','Peso específico',{min:1.3814,max:1.3843,popupAlert:'Valor fuera de rango permitido para Peso específico (1.3814 - 1.3843).'}),
                f.yesno('muestraPlanta','Muestra en Planta'),
                f.yesno('muestraLaboratorio','Muestra en Laboratorio'),
-               f.yesno('aprobadoLaboratorio','Aprobado de laboratorio')
+               f.yesno('aprobadoLaboratorio','Aprobado de laboratorio'),
+               f.photo('evidenciaFoto','Evidencia fotográfica')
             ]},
          'PC-03':{group:'PC', title:'Control de Muestras', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
@@ -268,7 +275,8 @@
                f.selectOther('puntoMuestreo','Punto de muestreo',['PM-01']),
                f.date('fechaAnálisis','Fecha de análisis'),
                f.select('envío','Envío interno/externo',['Interno','Externo']),
-               f.yesno('muestraTomada','Muestra tomada')
+               f.yesno('muestraTomada','Muestra tomada'),
+               f.photo('evidenciaFoto','Evidencia fotográfica')
             ]},
          'PC-04':{group:'PC', title:'Producto No Conforme', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
@@ -279,7 +287,8 @@
                f.yesno('limpiezaTanque','Limpieza del tanque después del PNC'),
                f.date('fechaEmpaque','Fecha de empaque'),
                f.date('fechaEnvío','Fecha de envío'),
-               f.dynamic('lugarEnvío','Lugar de envío','lugaresEnvío')
+               f.dynamic('lugarEnvío','Lugar de envío','lugaresEnvío'),
+               f.photo('evidenciaFoto','Evidencia fotográfica')
             ]},
          'PC-05':{group:'PC', title:'Registro de Equipos (Calibración)', fields:[]},
          'EV-01':{group:'EV', title:'Reporte de Evidencias', fields:[]}
@@ -310,7 +319,7 @@
           localStorage.setItem(storageKeyRecords(plant, formId), JSON.stringify(records)); sendToCloud(plant, formId, record);
       }
 
-      function clearRecords(plant, formId){ localStorage.removeItem(storageKeyRecords(plant, formId)); } function sendToCloud(plant, formId, record){ try{ fetch(APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({plant:plant, reportCode:formId, record:record})}); }catch(e){} } function validateComplete(controls){ const missing = controls.filter(function(c){ if(c.field.label && c.field.label.indexOf('(opcional)')!==-1) return false; const v = c.getValue(); if(v && typeof v==='object' && v.__multi){ if(v.main===undefined || v.main===null || v.main.toString().trim()==='') return true; const extraVals=Object.keys(v.extra||{}).map(function(k){return v.extra[k];}); return extraVals.some(function(ev){ return ev===undefined||ev===null||ev.toString().trim()===''; }); } return v===undefined || v===null || v.toString().trim()===''; }); return missing; } function pad(n){return n.toString().padStart(2,'0');}
+      function clearRecords(plant, formId){ localStorage.removeItem(storageKeyRecords(plant, formId)); } function sendToCloud(plant, formId, record){ try{ fetch(APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({plant:plant, reportCode:formId, record:record})}); }catch(e){} } function validateComplete(controls){ const missing = controls.filter(function(c){ if(c.field.label && c.field.label.indexOf('(opcional)')!==-1) return false; const v = c.getValue(); if(v && typeof v==='object' && v.__multi){ if(v.main===undefined || v.main===null || v.main.toString().trim()==='') return true; const extraVals=Object.keys(v.extra||{}).map(function(k){return v.extra[k];}); return extraVals.some(function(ev){ return ev===undefined||ev===null||ev.toString().trim()===''; }); } if(v && typeof v==='object' && v.__photo){ return !v.dataUrl || v.dataUrl.toString().trim()===''; } return v===undefined || v===null || v.toString().trim()===''; }); return missing; } function pad(n){return n.toString().padStart(2,'0');}
       function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
       function nowTimeStr(){ const d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); }
 
@@ -530,6 +539,39 @@
                       reasonInputs.forEach(function(r,i){ extra['Motivo de rechazo - Tote '+(i+1)]=r.value; });
                       return {__multi:true, main:input.value, extra:extra};
                 };
+          } else if(field.type==='photo'){
+                const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.accept='image/*'; fileInput.setAttribute('capture','environment'); fileInput.style.display='none';
+                const camBtn=document.createElement('button'); camBtn.type='button'; camBtn.className='btn btn-secondary'; camBtn.style.display='inline-flex'; camBtn.style.alignItems='center'; camBtn.style.gap='8px';
+                const camIcon=document.createElement('span'); camIcon.textContent='📷'; camIcon.style.fontSize='20px'; camIcon.style.lineHeight='1';
+                const camText=document.createElement('span'); camText.textContent='Tomar / Subir foto';
+                camBtn.appendChild(camIcon); camBtn.appendChild(camText);
+                camBtn.addEventListener('click', function(){ fileInput.click(); });
+                const fileNameLabel=document.createElement('div'); fileNameLabel.style.marginTop='6px'; fileNameLabel.style.fontSize='13px'; fileNameLabel.style.color='#374151';
+                const preview=document.createElement('img'); preview.style.maxWidth='220px'; preview.style.marginTop='8px'; preview.style.borderRadius='6px'; preview.style.border='1px solid #ccc'; preview.style.display='none';
+                wrap.appendChild(camBtn); wrap.appendChild(fileNameLabel); wrap.appendChild(fileInput); wrap.appendChild(preview);
+                let photoData='';
+                fileInput.addEventListener('change', function(){
+                      const file=fileInput.files[0];
+                      if(!file){ photoData=''; preview.style.display='none'; fileNameLabel.textContent=''; return; }
+                      fileNameLabel.textContent='✓ '+file.name;
+                      const reader=new FileReader();
+                      reader.onload=function(ev){
+                            const img=new Image();
+                            img.onload=function(){
+                                  const maxW=900;
+                                  const scale=Math.min(1, maxW/img.width);
+                                  const canvas=document.createElement('canvas');
+                                  canvas.width=Math.round(img.width*scale); canvas.height=Math.round(img.height*scale);
+                                  const cctx=canvas.getContext('2d');
+                                  cctx.drawImage(img,0,0,canvas.width,canvas.height);
+                                  photoData=canvas.toDataURL('image/jpeg', 0.7);
+                                  preview.src=photoData; preview.style.display='block';
+                            };
+                            img.src=ev.target.result;
+                      };
+                      reader.readAsDataURL(file);
+                });
+                getValue=function(){ return {__photo:true, dataUrl:photoData}; };
           } else {
                 const input=document.createElement('input'); input.type='text';
                 wrap.appendChild(input);
@@ -574,9 +616,9 @@
                 const actions = document.createElement('div'); actions.className='form-actions';
                 const saveBtn=document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='Guardar registro';
                 saveBtn.addEventListener('click', function(){
-                        const missing=validateComplete(controls); if(missing.length>0){ alert('Estás enviando un reporte incompleto. Debes completar todos los campos. Falta: '+missing.map(function(c){return c.field.label;}).join(', ')); return; } const record={};
-                        controls.forEach(function(c){ const v=c.getValue(); if(v && typeof v==='object' && v.__multi){ record[c.field.label]=v.main; Object.keys(v.extra||{}).forEach(function(k){ record[k]=v.extra[k]; }); } else { record[c.field.label]=v; } });
-                        saveRecord(state.plant, state.formId, record);
+                        const missing=validateComplete(controls); if(missing.length>0){ alert('Estás enviando un reporte incompleto. Debes completar todos los campos. Falta: '+missing.map(function(c){return c.field.label;}).join(', ')); return; } const record={}; const cloudRecord={};
+                        controls.forEach(function(c){ const v=c.getValue(); if(v && typeof v==='object' && v.__multi){ record[c.field.label]=v.main; cloudRecord[c.field.label]=v.main; Object.keys(v.extra||{}).forEach(function(k){ record[k]=v.extra[k]; cloudRecord[k]=v.extra[k]; }); } else if(v && typeof v==='object' && v.__photo){ record[c.field.label]=v.dataUrl?'Foto adjuntada (ver Google Sheets/Drive)':''; cloudRecord[c.field.label]=v.dataUrl||''; } else { record[c.field.label]=v; cloudRecord[c.field.label]=v; } });
+                        var __recs=getRecords(state.plant, state.formId); __recs.push(record); localStorage.setItem(storageKeyRecords(state.plant, state.formId), JSON.stringify(__recs)); sendToCloud(state.plant, state.formId, cloudRecord);
                         controls.forEach(function(c){
                                   if(c.field.type==='dynamic'){ addToList(state.plant, c.field.listKey, c.getValue()); }
                         });
