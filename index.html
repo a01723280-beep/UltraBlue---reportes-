@@ -119,7 +119,8 @@
           dynamic:(key,label,listKey)=>({key,label,type:'dynamic',listKey}),
           multiFixed:(key,label,options)=>({key,label,type:'multiFixed',options}),
           toteReject:(key,label)=>({key,label,type:'toteReject'}),
-          photo:(key,label)=>({key,label,type:'photo'})
+          photo:(key,label)=>({key,label,type:'photo'}),
+          dynamicNumeric:(key,label,listKey)=>({key,label,type:'dynamic',listKey,numericOnly:true})
       };
 
       function envasadoFields(tipo){
@@ -172,6 +173,7 @@
          'PO-02':{group:'PO', title:'Recepción e Inspección de Totes (IBC)', fields:[
                f.date('fecha','Fecha'), f.time('hora','Hora'),
                f.select('operador','Operador',OPERADORES),
+               f.dynamicNumeric('ordenesCompra','Órdenes de compra','ordenesCompra'),
                f.yesno('documentacionCompleta','Documentación completa'),
                f.number('totesOrdenados','No. de totes ordenados'),
                f.number('totesRecibidos','No. de totes recibidos'),
@@ -494,6 +496,7 @@
                 getValue=function(){ const checked=div.querySelector('input[type=radio]:checked'); return checked?checked.value:''; };
           } else if(field.type==='dynamic'){
                 const input=document.createElement('input'); input.type='text';
+                if(field.numericOnly){ input.setAttribute('inputmode','numeric'); input.addEventListener('input', function(){ const cleaned=input.value.replace(/\D/g,''); if(cleaned!==input.value) input.value=cleaned; }); }
                 const listId='dl_'+field.key+'_'+Math.random().toString(36).slice(2);
                 const datalist=document.createElement('datalist'); datalist.id=listId;
                 getList(plant, field.listKey).forEach(function(v){ const op=document.createElement('option'); op.value=v; datalist.appendChild(op); });
