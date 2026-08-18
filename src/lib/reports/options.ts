@@ -8,13 +8,12 @@ export const ESTADO_4: FieldOption[] = [
 ];
 
 // Las bolsas de urea no se califican en una escala de calidad como el resto
-// del equipo: lo que importa es en qué condición llegaron, y "dañada" o
-// "húmeda" son hallazgos concretos, no grados de "regular".
+// del equipo: al recibirlas solo se distingue si llegaron bien, con desgaste
+// normal, o dañadas.
 export const ESTADO_BOLSAS: FieldOption[] = [
-  { value: "Excelente", label: "Excelente" },
   { value: "Buena", label: "Buena" },
+  { value: "Normal", label: "Normal" },
   { value: "Dañada", label: "Dañada" },
-  { value: "Húmeda", label: "Húmeda" },
 ];
 
 export const TANQUES_ALMACENAMIENTO: FieldOption[] = [
