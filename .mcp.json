@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "/Users/pablosafi/Desktop/Claude Code UltraBlue/.tools/node/bin/npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}

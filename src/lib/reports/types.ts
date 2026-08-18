@@ -53,7 +53,7 @@ export interface SectionDef {
   showIf?: (values: FormValues) => boolean;
 }
 
-export type ReportCategory = "operacion" | "calidad";
+export type ReportCategory = "operacion" | "calidad" | "evidencias";
 
 export interface ReportDef {
   code: string; // "PO-01"

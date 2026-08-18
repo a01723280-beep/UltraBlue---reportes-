@@ -213,6 +213,7 @@ export const po01: ReportDef = {
           showIf: (v) => v.materiaPrimaAprobada === false,
           required: true,
         },
+        { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "comentarios", label: "Comentarios", type: "textarea" },
         { id: "firma", label: "Firma de Operador / Supervisor", type: "signature", required: true },
       ],

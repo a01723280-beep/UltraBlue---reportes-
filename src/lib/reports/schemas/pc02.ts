@@ -103,6 +103,7 @@ export const pc02: ReportDef = {
           ],
           required: true,
         },
+        { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "observaciones", label: "Observaciones", type: "textarea" },
       ],
     },

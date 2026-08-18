@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardList, FlaskConical, Download, ChevronLeft } from "lucide-react";
+import { ClipboardList, FlaskConical, Camera, Download, ChevronLeft } from "lucide-react";
 import { getPlant } from "@/lib/plants";
 import { REPORTS } from "@/lib/reports/schemas";
 
@@ -11,6 +11,7 @@ export default async function PlantPage({ params }: { params: Promise<{ plant: s
 
   const operacion = REPORTS.filter((r) => r.category === "operacion");
   const calidad = REPORTS.filter((r) => r.category === "calidad");
+  const evidencias = REPORTS.filter((r) => r.category === "evidencias");
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
@@ -35,6 +36,7 @@ export default async function PlantPage({ params }: { params: Promise<{ plant: s
 
       <ReportGroup title="Reportes de operación" icon={<ClipboardList size={18} />} reports={operacion} plant={plant.slug} />
       <ReportGroup title="Reportes de calidad" icon={<FlaskConical size={18} />} reports={calidad} plant={plant.slug} />
+      <ReportGroup title="Evidencias" icon={<Camera size={18} />} reports={evidencias} plant={plant.slug} />
     </main>
   );
 }

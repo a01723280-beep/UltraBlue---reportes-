@@ -97,6 +97,7 @@ export const pc04: ReportDef = {
       fields: [
         { id: "ncCerrada", label: "¿Se cerró la no conformidad?", type: "boolean", required: true },
         { id: "numeroAccionCorrectiva", label: "Número de Acción Correctiva (si aplica)", type: "text" },
+        { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "observaciones", label: "Observaciones", type: "textarea" },
       ],
     },

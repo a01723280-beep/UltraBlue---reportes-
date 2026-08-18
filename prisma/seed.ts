@@ -23,6 +23,7 @@ const BASE_DATA: Record<string, string[]> = {
   [LIST.laboratorios]: ["Laboratorio interno UltraBlue"],
   [LIST.responsablesLaboratorio]: ["Jahaziel Escobedo", "Neder Escobedo", "Francisco Oyervides", "Martín Gonzalez", "Santiago Cerda"],
   [LIST.lugaresEnvio]: [],
+  [LIST.instructores]: ["Ing. Francisco González", "Jahaziel Escobedo"],
 };
 
 async function main() {

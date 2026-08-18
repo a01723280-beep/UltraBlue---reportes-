@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm, Controller, FieldValues } from "react-hook-form";
-import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
 import { ReportDef, FieldDef, FormValues } from "@/lib/reports/types";
 import { generateFolio } from "@/lib/folio";
 import MasterSelect from "./MasterSelect";
@@ -40,6 +40,43 @@ async function fileToDataUrl(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// A phone photo is 3-5 MB, and base64 adds ~33% on top. Submissions travel as
+// one JSON body, so several full-size photos would blow past the 4.5 MB body
+// limit serverless hosts impose. Downscaling to a long edge of 1600px and
+// re-encoding as JPEG keeps evidence legible at roughly 150-300 KB each.
+const PHOTO_MAX_EDGE = 1600;
+const PHOTO_QUALITY = 0.7;
+
+async function compressImage(file: File): Promise<string> {
+  const original = await fileToDataUrl(file);
+  // Anything that isn't a raster image (or fails to decode) is stored as-is.
+  if (!file.type.startsWith("image/")) return original;
+
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = original;
+    });
+
+    const scale = Math.min(1, PHOTO_MAX_EDGE / Math.max(img.width, img.height));
+    if (scale === 1 && file.size < 500_000) return original;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return original;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const compressed = canvas.toDataURL("image/jpeg", PHOTO_QUALITY);
+    return compressed.length < original.length ? compressed : original;
+  } catch {
+    return original;
+  }
 }
 
 export default function DynamicForm({ report, plant, initialLists }: DynamicFormProps) {
@@ -319,39 +356,114 @@ function FieldRenderer({
         <Controller
           name={field.id}
           control={control}
-          render={({ field: { value, onChange } }) => {
-            const photos = (value as { name: string; dataUrl: string }[] | undefined) ?? [];
-            return (
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={async (e) => {
-                    const files = Array.from(e.target.files ?? []);
-                    const next = await Promise.all(
-                      files.map(async (f) => ({ name: f.name, dataUrl: await fileToDataUrl(f) }))
-                    );
-                    onChange([...photos, ...next]);
-                  }}
-                  className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-50 file:px-3 file:py-2 file:text-sky-700 hover:file:bg-sky-100"
-                />
-                {photos.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {photos.map((p, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={i} src={p.dataUrl} alt={p.name} className="h-16 w-16 rounded-lg object-cover ring-1 ring-slate-200" />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          }}
+          rules={{ validate: (v) => (field.required ? (Array.isArray(v) && v.length > 0) || "Requerido" : true) }}
+          render={({ field: { value, onChange } }) => (
+            <PhotoField
+              photos={(value as PhotoValue[] | undefined) ?? []}
+              onChange={onChange}
+            />
+          )}
         />
       )}
 
       {alert && <p className="mt-1.5 text-sm font-medium text-amber-600">{alert}</p>}
       {error && <p className="mt-1.5 text-sm text-red-600">Este campo es obligatorio.</p>}
+    </div>
+  );
+}
+
+interface PhotoValue {
+  name: string;
+  dataUrl: string;
+}
+
+/** Two entry points for the same value: "Tomar foto" sets `capture`, which makes
+ * a phone open its camera straight away, while "Subir imagen" opens the normal
+ * picker for photos already taken. Desktop browsers ignore `capture` and show
+ * the file dialog for both. */
+function PhotoField({
+  photos,
+  onChange,
+}: {
+  photos: PhotoValue[];
+  onChange: (next: PhotoValue[]) => void;
+}) {
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+
+  async function addFiles(fileList: FileList | null) {
+    const files = Array.from(fileList ?? []);
+    if (files.length === 0) return;
+    const next = await Promise.all(
+      files.map(async (f) => ({ name: f.name, dataUrl: await compressImage(f) }))
+    );
+    onChange([...photos, ...next]);
+  }
+
+  return (
+    <div>
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={async (e) => {
+          await addFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={galleryRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={async (e) => {
+          await addFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => cameraRef.current?.click()}
+          className="inline-flex items-center gap-2 rounded-lg border border-sky-600 bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700"
+        >
+          <Camera size={16} /> Tomar foto
+        </button>
+        <button
+          type="button"
+          onClick={() => galleryRef.current?.click()}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+        >
+          <ImagePlus size={16} /> Subir imagen
+        </button>
+      </div>
+
+      {photos.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {photos.map((p, i) => (
+            <div key={`${p.name}-${i}`} className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={p.dataUrl}
+                alt={p.name}
+                className="h-20 w-20 rounded-lg object-cover ring-1 ring-slate-200"
+              />
+              <button
+                type="button"
+                aria-label={`Quitar ${p.name}`}
+                onClick={() => onChange(photos.filter((_, j) => j !== i))}
+                className="absolute -right-1.5 -top-1.5 rounded-full bg-slate-700 p-1 text-white transition hover:bg-red-600"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

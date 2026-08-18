@@ -116,6 +116,7 @@ export const pc03: ReportDef = {
           showIf: (v) => v.resultado === "No conforme",
           required: true,
         },
+        { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "observaciones", label: "Observaciones", type: "textarea" },
       ],
     },

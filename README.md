@@ -87,6 +87,19 @@ En el proyecto ya importado, abre la pestaña **Storage → Create Database →
 Postgres** (o Neon/Supabase si prefieres). Al conectarla al proyecto, Vercel
 agrega automáticamente la variable de entorno `DATABASE_URL`.
 
+### 4b. Define la contraseña de acceso
+
+El sitio está detrás de una contraseña compartida (ver
+[`src/proxy.ts`](src/proxy.ts)). En Vercel → **Settings → Environment
+Variables**, agrega:
+
+| Variable | Valor |
+| --- | --- |
+| `APP_PASSWORD` | la contraseña que compartirás con los operadores |
+
+Sin esta variable la app responde con error en todas las rutas. Cambiarla
+cierra la sesión de todos los dispositivos, porque también firma la cookie.
+
 ### 5. Crea las tablas y carga los datos base
 
 Con la `DATABASE_URL` de producción (cópiala desde Vercel → Settings →

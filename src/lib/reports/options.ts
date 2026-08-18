@@ -34,4 +34,53 @@ export const LIST = {
   laboratorios: "laboratorios",
   responsablesLaboratorio: "responsables_laboratorio",
   lugaresEnvio: "lugares_envio",
+  instructores: "instructores",
 } as const;
+
+// Fixed equipment catalog for PC-05 (calibración). Unlike the master lists
+// these are physical instruments with fixed plate data, so selecting one
+// auto-fills its función / marca / serie / código instead of being typed.
+export interface EquipoCalibracion {
+  funcion: string;
+  marca: string;
+  serie: string;
+  codigo: string;
+}
+
+export const EQUIPOS_CALIBRACION: Record<string, EquipoCalibracion> = {
+  "Termohigrómetro": {
+    funcion: "Medidor de temperatura y humedad",
+    marca: "Huato",
+    serie: "H23AIG064",
+    codigo: "UDM-001",
+  },
+  "Copa de Densidad": {
+    funcion: "Medición de peso específico",
+    marca: "Modern Instruments",
+    serie: "NA",
+    codigo: "UDM-002",
+  },
+  "Medidor PH": {
+    funcion: "Medir PH en solución líquida",
+    marca: "Atago",
+    serie: "5028227",
+    codigo: "UDM-003",
+  },
+  "Refractómetro": {
+    funcion: "Medir concentración de urea",
+    marca: "Atago",
+    serie: "SA914820",
+    codigo: "UDM-004",
+  },
+  "Báscula": {
+    funcion: "Medir peso en gramos",
+    marca: "Rhino",
+    serie: "BAORE3-01979-0025",
+    codigo: "UDM-005",
+  },
+};
+
+export const EQUIPOS_CALIBRACION_OPTIONS: FieldOption[] = Object.keys(EQUIPOS_CALIBRACION).map((k) => ({
+  value: k,
+  label: k,
+}));

@@ -3,7 +3,7 @@ import { LIST, ESTADO_4, TANQUES_ALMACENAMIENTO } from "../options";
 
 export const po05: ReportDef = {
   code: "PO-05",
-  title: "Reporte de envasado de tambo",
+  title: "Reporte de envasado de tote (IBC)",
   category: "operacion",
   sections: [
     {
@@ -18,21 +18,22 @@ export const po05: ReportDef = {
       ],
     },
     {
-      id: "inspeccion-tambo",
-      title: "Inspección del tambo",
+      id: "inspeccion-ibc",
+      title: "Inspección del IBC",
       fields: [
-        { id: "limpioExterno", label: "¿El tambo está limpio externamente?", type: "boolean", required: true },
-        { id: "limpioInterno", label: "¿El tambo está limpio internamente?", type: "boolean", required: true },
-        { id: "estadoGeneral", label: "Estado general del tambo", type: "select", options: ESTADO_4, required: true },
-        { id: "presentaDanos", label: "¿El tambo presenta daños?", type: "boolean", required: true },
+        { id: "limpioExterno", label: "¿El IBC está limpio externamente?", type: "boolean", required: true },
+        { id: "limpioInterno", label: "¿El IBC está limpio internamente?", type: "boolean", required: true },
+        { id: "estadoGeneral", label: "Estado general del IBC", type: "select", options: ESTADO_4, required: true },
+        { id: "presentaDanos", label: "¿El IBC presenta daños?", type: "boolean", required: true },
         {
           id: "tipoDano",
           label: "Tipo de daño",
           type: "select",
-          options: ["Golpe", "Abolladura", "Óxido", "Fuga", "Otro"].map((v) => ({ value: v, label: v })),
+          options: ["Golpe", "Grieta", "Jaula dañada", "Válvula dañada", "Otro"].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.presentaDanos === true,
           required: true,
         },
+        { id: "valvulaFunciona", label: "¿La válvula funciona correctamente?", type: "boolean", required: true },
         { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
       ],
     },
@@ -41,24 +42,23 @@ export const po05: ReportDef = {
       title: "Sellado",
       fields: [
         { id: "numeroSello", label: "Número de sello", type: "text", required: true },
-        { id: "selloColocadoBien", label: "¿El sello fue colocado correctamente?", type: "boolean", required: true },
+        { id: "selloColocadoBien", label: "¿Se colocó correctamente el sello?", type: "boolean", required: true },
+      ],
+    },
+    {
+      id: "cliente",
+      title: "Cliente",
+      fields: [
+        { id: "cliente", label: "Cliente", type: "master-select", listKey: LIST.clientes, required: true },
+        { id: "ordenVenta", label: "Orden de venta", type: "master-select", listKey: LIST.ordenesVenta, required: true },
       ],
     },
     {
       id: "llenado",
       title: "Llenado",
       fields: [
-        { id: "volumenPorTambo", label: "Volumen por tambo", type: "number", unit: "L", min: 0, required: true },
-        { id: "numeroTambosLlenados", label: "Número de tambos llenados", type: "number", min: 0, required: true },
-        { id: "todosLlenadosBien", label: "¿Todos los tambos fueron llenados correctamente?", type: "boolean", required: true },
-        {
-          id: "tambosConProblemas",
-          label: "¿Cuántos tambos presentaron problemas?",
-          type: "number",
-          min: 0,
-          showIf: (v) => v.todosLlenadosBien === false,
-          required: true,
-        },
+        { id: "litrosCargados", label: "Litros cargados", type: "number", unit: "L", min: 0, required: true },
+        { id: "coincideOrden", label: "¿La cantidad cargada coincide con la orden?", type: "boolean", required: true },
       ],
     },
     {
@@ -78,10 +78,11 @@ export const po05: ReportDef = {
           id: "tipoAnomalia",
           label: "Tipo de anomalía",
           type: "select",
-          options: ["Derrame", "Fuga", "Problema en bomba", "Problema en manguera", "Tambo dañado", "Otro"].map((v) => ({ value: v, label: v })),
+          options: ["Derrame", "Problema en bomba", "Problema en válvula", "IBC dañado", "Fuga", "Otro"].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.anomalia === true,
           required: true,
         },
+        { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "comentarios", label: "Comentarios", type: "textarea" },
       ],
     },
