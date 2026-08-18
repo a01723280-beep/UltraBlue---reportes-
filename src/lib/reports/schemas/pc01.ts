@@ -1,5 +1,5 @@
 import { ReportDef } from "../types";
-import { LIST } from "../options";
+import { LIST, ESTADO_BOLSAS } from "../options";
 
 export const pc01: ReportDef = {
   code: "PC-01",
@@ -29,12 +29,7 @@ export const pc01: ReportDef = {
       id: "inspeccion-visual",
       title: "Inspección visual",
       fields: [
-        { id: "estadoBolsas", label: "Estado de las bolsas", type: "select", options: [
-          { value: "Excelente", label: "Excelente" },
-          { value: "Bueno", label: "Bueno" },
-          { value: "Regular", label: "Regular" },
-          { value: "Malo", label: "Malo" },
-        ], required: true },
+        { id: "estadoBolsas", label: "Estado de las bolsas", type: "select", options: ESTADO_BOLSAS, required: true },
         {
           id: "colorProducto",
           label: "Color del producto",

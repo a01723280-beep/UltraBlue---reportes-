@@ -7,6 +7,16 @@ export const ESTADO_4: FieldOption[] = [
   { value: "Malo", label: "Malo" },
 ];
 
+// Las bolsas de urea no se califican en una escala de calidad como el resto
+// del equipo: lo que importa es en qué condición llegaron, y "dañada" o
+// "húmeda" son hallazgos concretos, no grados de "regular".
+export const ESTADO_BOLSAS: FieldOption[] = [
+  { value: "Excelente", label: "Excelente" },
+  { value: "Buena", label: "Buena" },
+  { value: "Dañada", label: "Dañada" },
+  { value: "Húmeda", label: "Húmeda" },
+];
+
 export const TANQUES_ALMACENAMIENTO: FieldOption[] = [
   { value: "TDEF-1", label: "TDEF-1" },
   { value: "TDEF-2", label: "TDEF-2" },
