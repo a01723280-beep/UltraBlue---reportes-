@@ -5,6 +5,12 @@
 export const SESSION_COOKIE = "ub_session";
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 días
 
+/** Whether the gate is usable at all. Callers surface this as a deployment
+ * problem instead of letting it surface as an opaque 500. */
+export function isConfigured(): boolean {
+  return typeof process.env.APP_PASSWORD === "string" && process.env.APP_PASSWORD !== "";
+}
+
 function secret(): string {
   // APP_PASSWORD doubles as the signing key: rotating the password invalidates
   // every outstanding session, which is the behaviour we want here.

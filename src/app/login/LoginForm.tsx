@@ -30,7 +30,8 @@ export default function LoginForm() {
     }
 
     setPending(false);
-    setError("Contraseña incorrecta.");
+    const body = await res.json().catch(() => null);
+    setError(body?.error ?? "Contraseña incorrecta.");
   }
 
   return (
