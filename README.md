@@ -9,19 +9,25 @@ orden → guardar** (se almacena en base de datos) → **Descargas** genera y
 descarga un `.xlsx` con todas las respuestas de ese reporte, actualizado al
 momento.
 
-Construido con Next.js (App Router) + Prisma + SQLite en desarrollo /
-PostgreSQL en producción + exceljs.
+Construido con Next.js (App Router) + Prisma + PostgreSQL (Supabase) +
+exceljs.
 
 ## Desarrollo local
 
+Necesitas un `.env` con `DATABASE_URL`, `DIRECT_URL` y `APP_PASSWORD` (ver
+["Desplegar en Vercel"](#desplegar-en-vercel) para de dónde salen las dos
+primeras). Puedes apuntar al mismo proyecto de Supabase que producción, o
+crear uno aparte para no mezclar datos de prueba con los reales.
+
 ```bash
 npm install
-npx prisma migrate dev   # crea prisma/dev.db (SQLite) con las tablas
-npm run db:seed          # carga operadores/proveedores/tanques base por planta
+npx prisma migrate deploy   # crea las tablas
+npm run db:seed             # carga operadores/proveedores/tanques base por planta
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000).
+Abre [http://localhost:3000](http://localhost:3000) y entra con la
+contraseña de `APP_PASSWORD`.
 
 Nota: si `next dev` falla con un error de Turbopack en tu máquina, usa
 `next dev --webpack` (ver `.claude/launch.json`).
@@ -59,21 +65,31 @@ gh repo create ultrablue-reportes --private --source=. --push
 # o crea el repo manualmente en github.com y haz git push
 ```
 
-### 2. Cambia la base de datos de SQLite a Postgres
+### 2. Crea la base de datos en Supabase
 
-SQLite vive en un archivo local; en Vercel el sistema de archivos se borra en
-cada request, así que **no sirve en producción**. Antes de desplegar, edita
-[`prisma/schema.prisma`](prisma/schema.prisma):
+En [supabase.com](https://supabase.com) crea un proyecto. Guarda la
+contraseña de la base que te pide al crearlo — no se vuelve a mostrar.
 
-```prisma
-datasource db {
-  provider = "postgresql"   // antes decía "sqlite"
-  url      = env("DATABASE_URL")
-}
+Ya creado, ve a **Project Settings → Database → Connection string** y copia
+las dos cadenas, porque Prisma necesita ambas:
+
+| Variable | Pestaña | Puerto | Para qué |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | Transaction pooler | 6543 | Las consultas de la app |
+| `DIRECT_URL` | Direct connection | 5432 | Las migraciones |
+
+A `DATABASE_URL` agrégale `?pgbouncer=true` al final. Queda así (sustituye
+`[REF]`, `[PASSWORD]` y la región):
+
+```
+DATABASE_URL="postgresql://postgres.[REF]:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.[REF]:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
 ```
 
-Y elimina la carpeta `prisma/migrations/` (las migraciones de SQLite no
-aplican a Postgres; se vuelven a generar en el paso 4).
+> **Por qué dos.** El puerto 6543 es PgBouncer, que agrupa conexiones para
+> que las funciones serverless no agoten el límite de Postgres. Pero
+> PgBouncer no sabe ejecutar migraciones, así que esas van por el 5432.
+> `prisma/schema.prisma` ya está configurado para usar ambas.
 
 ### 3. Importa el proyecto en Vercel
 
@@ -81,11 +97,10 @@ En [vercel.com/new](https://vercel.com/new), elige "Import Git Repository" y
 selecciona el repo. Vercel detecta Next.js automáticamente — no hay que
 configurar nada más en este paso.
 
-### 4. Crea la base de datos Postgres
+### 4. Conecta Vercel con Supabase
 
-En el proyecto ya importado, abre la pestaña **Storage → Create Database →
-Postgres** (o Neon/Supabase si prefieres). Al conectarla al proyecto, Vercel
-agrega automáticamente la variable de entorno `DATABASE_URL`.
+En Vercel → **Settings → Environment Variables**, agrega `DATABASE_URL` y
+`DIRECT_URL` con los valores del paso 2.
 
 ### 4b. Define la contraseña de acceso
 
@@ -102,17 +117,19 @@ cierra la sesión de todos los dispositivos, porque también firma la cookie.
 
 ### 5. Crea las tablas y carga los datos base
 
-Con la `DATABASE_URL` de producción (cópiala desde Vercel → Settings →
-Environment Variables) en tu máquina:
+Crea un archivo `.env` local con las mismas dos URLs del paso 2 (`.env` está
+en `.gitignore`, no se sube), y desde tu máquina:
 
 ```bash
-DATABASE_URL="<la url de Postgres de Vercel>" npx prisma migrate deploy
-DATABASE_URL="<la url de Postgres de Vercel>" npm run db:seed
+npx prisma migrate deploy   # crea las tablas (usa DIRECT_URL)
+npm run db:seed             # carga operadores, proveedores, tanques…
 ```
 
-Esto crea las tablas y precarga los nombres de operadores, proveedores
-(Femssa, Santzer) y tanques que vienen en el documento original — todos
-editables después desde la app con "+ Otro".
+Esto precarga los nombres de operadores, proveedores (Femssa, Santzer),
+tanques e instructores — todos editables después desde la app con "+ Otro".
+
+Puedes comprobar en Supabase → **Table Editor** que aparecieron las tablas
+`MasterListItem` y `ReportSubmission`.
 
 ### 6. Despliega
 

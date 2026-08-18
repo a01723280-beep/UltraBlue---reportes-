@@ -1,21 +1,19 @@
 // Prisma schema for UltraBlue - Reportes de Planta
 //
-// Local development uses SQLite (zero setup). For Vercel production,
-// switch the datasource below to postgresql and set DATABASE_URL to a
-// Postgres connection string (see README.md "Desplegar en Vercel").
-//
-//   datasource db {
-//     provider = "postgresql"
-//     url      = env("DATABASE_URL")
-//   }
+// Postgres, hosted on Supabase. Supabase exposes two ports and Prisma needs
+// both: 6543 is the PgBouncer pool that serverless functions must use so they
+// don't exhaust connections, and 5432 talks to the database directly, which
+// is the only way migrations can run (PgBouncer can't handle them).
+// See README.md "Desplegar en Vercel".
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // A selectable option for a dropdown field, scoped to a plant + a field key
