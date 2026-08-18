@@ -1,9 +1,15 @@
 // Prisma schema for UltraBlue - Reportes de Planta
 //
-// Postgres, hosted on Supabase. Supabase exposes two ports and Prisma needs
-// both: 6543 is the PgBouncer pool that serverless functions must use so they
-// don't exhaust connections, and 5432 talks to the database directly, which
-// is the only way migrations can run (PgBouncer can't handle them).
+// Postgres, hosted on Supabase. Both variables are created automatically by
+// the Supabase integration in Vercel, so there is nothing to copy by hand:
+//
+//   POSTGRES_PRISMA_URL       port 6543, the PgBouncer pool. Serverless
+//                             functions must go through it or they exhaust
+//                             Postgres' connection limit.
+//   POSTGRES_URL_NON_POOLING  port 5432, a session connection. Migrations
+//                             only run here, because PgBouncer can't handle
+//                             them.
+//
 // See README.md "Desplegar en Vercel".
 
 generator client {
@@ -12,8 +18,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 // A selectable option for a dropdown field, scoped to a plant + a field key
