@@ -41,8 +41,11 @@ export interface FieldDef {
   showIf?: (values: FormValues) => boolean;
   /** For type "calculated": compute the displayed value from current answers. */
   calculate?: (values: FormValues) => string | number | null;
-  /** Optional warning banner shown under the field when this returns text. */
+  /** Optional note shown under the field when this returns text. */
   alertIf?: (values: FormValues) => string | null;
+  /** How to present `alertIf`. "warning" (default) flags something out of
+   * spec; "info" just states a fact the operator should notice. */
+  alertTone?: "warning" | "info";
   defaultValue?: unknown;
 }
 

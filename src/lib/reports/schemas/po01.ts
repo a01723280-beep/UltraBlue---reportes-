@@ -141,19 +141,28 @@ export const po01: ReportDef = {
         { id: "bolsasRecibidas", label: "Número de bolsas recibidas", type: "number", min: 0, required: true },
         {
           id: "diferenciaBolsas",
-          label: "Diferencia (recibidas − solicitadas)",
+          label: "Diferencia",
           type: "calculated",
+          // Siempre positiva: el sentido de la diferencia lo dice la nota,
+          // no el signo, que en captura rápida se lee mal.
           calculate: (v) => {
             const sol = numOrNull(v.bolsasSolicitadas);
             const rec = numOrNull(v.bolsasRecibidas);
             if (sol === null || rec === null) return null;
-            return rec - sol;
+            return Math.abs(rec - sol);
           },
+          alertTone: "info",
           alertIf: (v) => {
             const sol = numOrNull(v.bolsasSolicitadas);
             const rec = numOrNull(v.bolsasRecibidas);
             if (sol === null || rec === null) return null;
-            return rec - sol !== 0 ? "⚠️ Hay una diferencia entre lo solicitado y lo recibido." : null;
+            const diff = rec - sol;
+            if (diff === 0) return null;
+            const n = Math.abs(diff);
+            const una = n === 1;
+            return diff > 0
+              ? `Se está${una ? "" : "n"} recibiendo ${n} bolsa${una ? "" : "s"} más de las solicitadas.`
+              : `Falta${una ? "" : "n"} ${n} bolsa${una ? "" : "s"} respecto a lo solicitado.`;
           },
         },
       ],

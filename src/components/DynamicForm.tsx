@@ -366,7 +366,17 @@ function FieldRenderer({
         />
       )}
 
-      {alert && <p className="mt-1.5 text-sm font-medium text-amber-600">{alert}</p>}
+      {alert && (
+        <p
+          className={
+            field.alertTone === "info"
+              ? "mt-1.5 text-sm font-medium text-slate-600"
+              : "mt-1.5 text-sm font-medium text-amber-600"
+          }
+        >
+          {alert}
+        </p>
+      )}
       {error && <p className="mt-1.5 text-sm text-red-600">Este campo es obligatorio.</p>}
     </div>
   );
