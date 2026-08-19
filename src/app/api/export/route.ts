@@ -23,22 +23,34 @@ function photosOf(raw: unknown): StoredPhoto[] {
   );
 }
 
+// Ninguna celda se queda en blanco: una casilla vacía no distingue "no se
+// contestó" de "se perdió el dato", y al filtrar en Excel los huecos se
+// comportan distinto que un valor.
+const SIN_DATO = "Ninguno";
+
 function formatCell(type: string, raw: unknown): string | number | Date | null {
-  if (raw === null || raw === undefined || raw === "") return null;
+  const vacio = raw === null || raw === undefined || raw === "";
+
   switch (type) {
-    case "boolean":
-      return raw === true ? "Sí" : raw === false ? "No" : null;
-    case "number":
-    case "calculated":
-      return typeof raw === "number" ? raw : String(raw);
-    case "signature":
-      return raw ? "Firmado" : "No";
     case "photo":
-      // La imagen se incrusta aparte; la celda queda vacía para no tapar la
-      // miniatura con texto.
+      // La imagen se incrusta aparte; el texto lo pone quien arma la fila.
       return null;
+    case "number":
+      if (vacio) return 0;
+      return typeof raw === "number" ? raw : Number(raw);
+    case "calculated":
+      // `calculate` devuelve número o texto según el campo, así que se
+      // respeta el tipo que llegó.
+      if (vacio) return SIN_DATO;
+      return typeof raw === "number" ? raw : String(raw);
+    case "boolean":
+      // Un Sí/No sin responder no se convierte en "No": eso inventaría una
+      // respuesta que el operador nunca dio.
+      return raw === true ? "Sí" : raw === false ? "No" : SIN_DATO;
+    case "signature":
+      return raw ? "Firmado" : SIN_DATO;
     default:
-      return String(raw);
+      return vacio ? SIN_DATO : String(raw);
   }
 }
 
@@ -84,7 +96,7 @@ export async function GET(req: NextRequest) {
     const row: Record<string, unknown> = {
       _id: s.id,
       _createdAt: s.createdAt.toISOString().replace("T", " ").slice(0, 19),
-      _operator: s.operator ?? "",
+      _operator: s.operator ?? SIN_DATO,
     };
     for (const f of fields) {
       row[f.id] = formatCell(f.type, data[f.id]);
@@ -97,7 +109,7 @@ export async function GET(req: NextRequest) {
     for (const f of photoFields) {
       const photos = photosOf(data[f.id]);
       if (photos.length === 0) {
-        added.getCell(f.id).value = "Sin fotos";
+        added.getCell(f.id).value = SIN_DATO;
         continue;
       }
       rowHasPhoto = true;
