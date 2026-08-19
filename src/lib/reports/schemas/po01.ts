@@ -103,10 +103,15 @@ export const po01: ReportDef = {
           options: [
             { value: "No", label: "No" },
             { value: "Polvo", label: "Polvo" },
-            { value: "Tierra", label: "Tierra" },
-            { value: "Insectos", label: "Insectos" },
-            { value: "Material extraño", label: "Material extraño" },
+            { value: "Otro", label: "Otro" },
           ],
+          required: true,
+        },
+        {
+          id: "contaminantesOtro",
+          label: "¿Cuál contaminante?",
+          type: "text",
+          showIf: (v) => v.contaminantes === "Otro",
           required: true,
         },
         {
