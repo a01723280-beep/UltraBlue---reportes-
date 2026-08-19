@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 interface SignaturePadProps {
   value: string | null | undefined;
@@ -10,22 +10,37 @@ interface SignaturePadProps {
 export default function SignaturePad({ value, onChange }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
-  const [hasDrawn, setHasDrawn] = useState(false);
+  // Lo último que se pintó, para no volver a dibujar el trazo que acabamos de
+  // emitir nosotros mismos.
+  const rendered = useRef<string | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
     ctx.lineWidth = 2.2;
     ctx.lineCap = "round";
     ctx.strokeStyle = "#0f172a";
-    if (value) {
+  }, []);
+
+  // El lienzo tiene que seguir al valor del formulario: si al guardar un
+  // reporte se limpia, el trazo del reporte anterior no puede quedarse
+  // pintado y acabar firmando el siguiente.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+
+    const next = value || null;
+    if (next === rendered.current) return;
+    rendered.current = next;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (next) {
       const img = new Image();
       img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      img.src = value;
+      img.src = next;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [value]);
 
   function pos(e: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current!;
@@ -47,21 +62,22 @@ export default function SignaturePad({ value, onChange }: SignaturePadProps) {
     const { x, y } = pos(e);
     ctx.lineTo(x, y);
     ctx.stroke();
-    setHasDrawn(true);
   }
 
   function end() {
     if (!drawing.current) return;
     drawing.current = false;
-    const canvas = canvasRef.current!;
-    onChange(canvas.toDataURL("image/png"));
+    const dataUrl = canvasRef.current!.toDataURL("image/png");
+    // Ya está pintado en pantalla: registrarlo evita que el efecto lo
+    // vuelva a dibujar encima.
+    rendered.current = dataUrl;
+    onChange(dataUrl);
   }
 
   function clear() {
     const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    setHasDrawn(false);
+    canvas.getContext("2d")!.clearRect(0, 0, canvas.width, canvas.height);
+    rendered.current = null;
     onChange(null);
   }
 
@@ -81,7 +97,7 @@ export default function SignaturePad({ value, onChange }: SignaturePadProps) {
         <button type="button" onClick={clear} className="text-sm text-slate-500 underline underline-offset-2 hover:text-slate-700">
           Borrar firma
         </button>
-        {(hasDrawn || value) && <span className="text-sm text-emerald-600">Firma capturada</span>}
+        {value && <span className="text-sm text-emerald-600">Firma capturada</span>}
       </div>
     </div>
   );
