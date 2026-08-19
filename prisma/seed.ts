@@ -10,6 +10,8 @@ const BASE_DATA: Record<string, string[]> = {
   [LIST.operadores]: ["Jahaziel Escobedo", "Neder Escobedo", "Francisco Oyervides", "Martín Gonzalez", "Santiago Cerda"],
   [LIST.inspectoresCalidad]: ["Jahaziel Escobedo", "Neder Escobedo", "Francisco Oyervides", "Martín Gonzalez", "Santiago Cerda"],
   [LIST.proveedoresUrea]: ["Femssa", "Santzer"],
+  [LIST.fleteros]: ["3H"],
+  [LIST.choferes]: [],
   [LIST.ordenesCompra]: [],
   [LIST.tanquesMezclado]: ["Mixer 1", "Mixer 2"],
   [LIST.tanquesAguaCruda]: ["Tanque Agua Cruda 1", "Tanque Agua Cruda 2", "Tanque Agua Cruda 3"],

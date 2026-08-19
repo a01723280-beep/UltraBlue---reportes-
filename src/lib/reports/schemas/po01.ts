@@ -37,6 +37,22 @@ export const po01: ReportDef = {
           required: true,
         },
         {
+          // Fleteros y choferes se repiten entre recepciones, así que se
+          // eligen de una lista que crece sola con "+ Otro".
+          id: "fletero",
+          label: "Fletero",
+          type: "master-select",
+          listKey: LIST.fleteros,
+          required: true,
+        },
+        {
+          id: "nombreChofer",
+          label: "Nombre de chofer",
+          type: "master-select",
+          listKey: LIST.choferes,
+          required: true,
+        },
+        {
           id: "numeroLoteProveedor",
           label: "Número de lote del proveedor",
           type: "text",

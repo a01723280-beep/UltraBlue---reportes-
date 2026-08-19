@@ -30,6 +30,8 @@ export const LIST = {
   operadores: "operadores",
   inspectoresCalidad: "inspectores_calidad",
   proveedoresUrea: "proveedores_urea",
+  fleteros: "fleteros",
+  choferes: "choferes",
   ordenesCompra: "ordenes_compra",
   tanquesMezclado: "tanques_mezclado",
   tanquesAguaCruda: "tanques_agua_cruda",
