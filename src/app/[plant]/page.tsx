@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardList, FlaskConical, Camera, Download, ChevronLeft } from "lucide-react";
+import { ClipboardList, FlaskConical, Camera, Download, Images, ChevronLeft } from "lucide-react";
 import { getPlant } from "@/lib/plants";
 import { REPORTS } from "@/lib/reports/schemas";
 
@@ -24,15 +24,27 @@ export default async function PlantPage({ params }: { params: Promise<{ plant: s
         <p className="text-slate-500">Elige el reporte que vas a llenar.</p>
       </div>
 
-      <Link
-        href={`/${plant.slug}/descargas`}
-        className="mb-8 flex items-center justify-between rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 text-sky-800 transition hover:border-sky-300 hover:bg-sky-100"
-      >
-        <span className="flex items-center gap-2 font-medium">
-          <Download size={18} /> Descargar reportes en Excel
-        </span>
-        <ChevronLeft size={16} className="rotate-180" />
-      </Link>
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row">
+        <Link
+          href={`/${plant.slug}/descargas`}
+          className="flex flex-1 items-center justify-between rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 text-sky-800 transition hover:border-sky-300 hover:bg-sky-100"
+        >
+          <span className="flex items-center gap-2 font-medium">
+            <Download size={18} /> Descargar reportes en Excel
+          </span>
+          <ChevronLeft size={16} className="rotate-180" />
+        </Link>
+
+        <Link
+          href={`/${plant.slug}/evidencias`}
+          className="flex flex-1 items-center justify-between rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4 text-violet-800 transition hover:border-violet-300 hover:bg-violet-100"
+        >
+          <span className="flex items-center gap-2 font-medium">
+            <Images size={18} /> Ver evidencias fotográficas
+          </span>
+          <ChevronLeft size={16} className="rotate-180" />
+        </Link>
+      </div>
 
       <ReportGroup title="Reportes de operación" icon={<ClipboardList size={18} />} reports={operacion} plant={plant.slug} />
       <ReportGroup title="Reportes de calidad" icon={<FlaskConical size={18} />} reports={calidad} plant={plant.slug} />

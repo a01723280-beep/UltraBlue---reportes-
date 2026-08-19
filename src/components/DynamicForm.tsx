@@ -168,7 +168,6 @@ export default function DynamicForm({ report, plant, initialLists }: DynamicForm
                   errors={errors}
                   lists={lists}
                   updateListOptions={updateListOptions}
-                  fileToDataUrl={fileToDataUrl}
                 />
               ))}
             </div>
@@ -212,7 +211,6 @@ interface FieldRendererProps {
   errors: ReturnType<typeof useForm>["formState"]["errors"];
   lists: Record<string, string[]>;
   updateListOptions: (listKey: string, options: string[]) => void;
-  fileToDataUrl: (f: File) => Promise<string>;
 }
 
 function FieldRenderer({
@@ -224,7 +222,6 @@ function FieldRenderer({
   errors,
   lists,
   updateListOptions,
-  fileToDataUrl,
 }: FieldRendererProps) {
   const wide = field.type === "textarea" || field.type === "signature" || field.type === "photo";
   const error = errors[field.id];

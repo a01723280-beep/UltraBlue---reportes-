@@ -5,6 +5,24 @@ import { isPlantSlug, getPlant } from "@/lib/plants";
 import { getReportDef, allFieldsOf } from "@/lib/reports/schemas";
 import { FormValues } from "@/lib/reports/types";
 
+interface StoredPhoto {
+  name: string;
+  dataUrl: string;
+}
+
+// Cada foto se incrusta como una miniatura de este alto; el ancho se deriva
+// para no deformarla. Las filas con foto crecen para dejarle lugar.
+const PHOTO_ROW_HEIGHT = 90;
+const PHOTO_CELL_WIDTH = 120;
+
+function photosOf(raw: unknown): StoredPhoto[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (p): p is StoredPhoto =>
+      typeof p?.dataUrl === "string" && p.dataUrl.startsWith("data:image/")
+  );
+}
+
 function formatCell(type: string, raw: unknown): string | number | Date | null {
   if (raw === null || raw === undefined || raw === "") return null;
   switch (type) {
@@ -15,10 +33,10 @@ function formatCell(type: string, raw: unknown): string | number | Date | null {
       return typeof raw === "number" ? raw : String(raw);
     case "signature":
       return raw ? "Firmado" : "No";
-    case "photo": {
-      const arr = raw as { name: string }[] | undefined;
-      return arr && arr.length > 0 ? `${arr.length} foto(s) adjunta(s)` : "Sin fotos";
-    }
+    case "photo":
+      // La imagen se incrusta aparte; la celda queda vacía para no tapar la
+      // miniatura con texto.
+      return null;
     default:
       return String(raw);
   }
@@ -42,6 +60,7 @@ export async function GET(req: NextRequest) {
   });
 
   const fields = allFieldsOf(report);
+  const photoFields = fields.filter((f) => f.type === "photo");
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "UltraBlue";
   workbook.created = new Date();
@@ -51,7 +70,11 @@ export async function GET(req: NextRequest) {
     { header: "Folio interno", key: "_id", width: 24 },
     { header: "Fecha de registro", key: "_createdAt", width: 20 },
     { header: "Operador", key: "_operator", width: 22 },
-    ...fields.map((f) => ({ header: f.label, key: f.id, width: 26 })),
+    ...fields.map((f) => ({
+      header: f.label,
+      key: f.id,
+      width: f.type === "photo" ? PHOTO_CELL_WIDTH / 7 : 26,
+    })),
   ];
   sheet.getRow(1).font = { bold: true };
   sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCEEFB" } };
@@ -66,7 +89,32 @@ export async function GET(req: NextRequest) {
     for (const f of fields) {
       row[f.id] = formatCell(f.type, data[f.id]);
     }
-    sheet.addRow(row);
+    const added = sheet.addRow(row);
+
+    // Excel ancla las imágenes a coordenadas, no a celdas, así que hay que
+    // colocarlas después de conocer el número de fila.
+    let rowHasPhoto = false;
+    for (const f of photoFields) {
+      const photos = photosOf(data[f.id]);
+      if (photos.length === 0) {
+        added.getCell(f.id).value = "Sin fotos";
+        continue;
+      }
+      rowHasPhoto = true;
+      const col = sheet.getColumn(f.id).number;
+      photos.forEach((photo, i) => {
+        const [meta, base64] = photo.dataUrl.split(",");
+        if (!base64) return;
+        const extension = meta.includes("png") ? "png" : "jpeg";
+        const imageId = workbook.addImage({ base64, extension });
+        sheet.addImage(imageId, {
+          // Varias fotos del mismo campo se reparten a lo ancho de la celda.
+          tl: { col: col - 1 + i * 0.5, row: added.number - 1 } as ExcelJS.Anchor,
+          ext: { width: PHOTO_CELL_WIDTH, height: PHOTO_ROW_HEIGHT },
+        });
+      });
+    }
+    if (rowHasPhoto) added.height = PHOTO_ROW_HEIGHT * 0.78;
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
