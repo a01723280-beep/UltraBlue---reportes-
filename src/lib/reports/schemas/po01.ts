@@ -28,10 +28,12 @@ export const po01: ReportDef = {
           required: true,
         },
         {
+          // Cada unidad que llega trae una matrícula distinta, así que se
+          // escribe tal cual en vez de elegirse de una lista.
           id: "contenedor",
-          label: "Contenedor / Camión",
-          type: "master-select",
-          listKey: LIST.contenedores,
+          label: "Matrícula de la unidad",
+          type: "text",
+          help: "Serie alfanumérica, como aparece en la placa.",
           required: true,
         },
         {
