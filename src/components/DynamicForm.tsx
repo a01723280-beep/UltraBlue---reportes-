@@ -21,6 +21,9 @@ function nowTime() {
   return new Date().toTimeString().slice(0, 5);
 }
 
+/** Every field gets an explicit entry, including the empty ones: `reset()`
+ * only clears the keys it receives, so omitting a field would leave whatever
+ * the operator typed in the previous report still on screen. */
 function buildDefaultValues(report: ReportDef): FormValues {
   const values: FormValues = {};
   for (const section of report.sections) {
@@ -28,6 +31,9 @@ function buildDefaultValues(report: ReportDef): FormValues {
       if (field.type === "date") values[field.id] = today();
       else if (field.type === "time") values[field.id] = nowTime();
       else if (field.defaultValue !== undefined) values[field.id] = field.defaultValue;
+      else if (field.type === "boolean") values[field.id] = null;
+      else if (field.type === "photo") values[field.id] = [];
+      else values[field.id] = "";
     }
   }
   return values;
