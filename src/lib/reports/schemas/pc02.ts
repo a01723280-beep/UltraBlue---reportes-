@@ -4,6 +4,14 @@ import { numOrNull } from "../util";
 
 const CONC_MIN = 31.8;
 const CONC_MAX = 33.2;
+// Especificaciones ISO 22241 para el producto terminado. El sistema compara
+// contra ellas en vez de preguntarle al operador si el valor cumple: el dato
+// medido ya contiene la respuesta, y preguntarla abre la puerta a que se
+// conteste "sí" sobre una lectura fuera de rango.
+const PH_MIN = 9;
+const PH_MAX = 10;
+const DENSIDAD_MIN = 1.3814;
+const DENSIDAD_MAX = 1.3843;
 
 export const pc02: ReportDef = {
   code: "PC-02",
@@ -41,10 +49,34 @@ export const pc02: ReportDef = {
             return c >= CONC_MIN && c <= CONC_MAX ? null : "⚠️ Concentración fuera de especificación ISO 22241.";
           },
         },
-        { id: "ph", label: "pH", type: "number", required: true },
-        { id: "phCumple", label: "¿El pH cumple especificación?", type: "boolean", required: true },
-        { id: "pesoEspecifico", label: "Peso específico (densidad)", type: "number", required: true },
-        { id: "pesoEspecificoCumple", label: "¿El peso específico cumple especificación?", type: "boolean", required: true },
+        {
+          id: "ph",
+          label: `pH (especificación ${PH_MIN}–${PH_MAX})`,
+          type: "number",
+          step: 0.01,
+          required: true,
+          alertIf: (v) => {
+            const x = numOrNull(v.ph);
+            if (x === null) return null;
+            return x < PH_MIN || x > PH_MAX
+              ? `⚠️ pH fuera de especificación (${PH_MIN}–${PH_MAX}).`
+              : null;
+          },
+        },
+        {
+          id: "pesoEspecifico",
+          label: `Peso específico (especificación ${DENSIDAD_MIN}–${DENSIDAD_MAX})`,
+          type: "number",
+          step: 0.0001,
+          required: true,
+          alertIf: (v) => {
+            const x = numOrNull(v.pesoEspecifico);
+            if (x === null) return null;
+            return x < DENSIDAD_MIN || x > DENSIDAD_MAX
+              ? `⚠️ Peso específico fuera de especificación (${DENSIDAD_MIN}–${DENSIDAD_MAX}).`
+              : null;
+          },
+        },
       ],
     },
     {
@@ -84,6 +116,13 @@ export const pc02: ReportDef = {
             "Otro",
           ].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.resultadoLaboratorio === "Rechazado",
+          required: true,
+        },
+        {
+          id: "motivoRechazoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.motivoRechazo === "Otro",
           required: true,
         },
       ],

@@ -16,6 +16,13 @@ export const ESTADO_BOLSAS: FieldOption[] = [
   { value: "Dañada", label: "Dañada" },
 ];
 
+/** Los mezcladores de la planta, con el nombre que se les da en piso. */
+export const TANQUES_MEZCLADO: FieldOption[] = [
+  { value: "Rusia tanque 1", label: "Rusia tanque 1" },
+  { value: "Brasil tanque 1", label: "Brasil tanque 1" },
+  { value: "Brasil tanque 2", label: "Brasil tanque 2" },
+];
+
 export const TANQUES_ALMACENAMIENTO: FieldOption[] = [
   { value: "TDEF-1", label: "TDEF-1" },
   { value: "TDEF-2", label: "TDEF-2" },

@@ -1,6 +1,8 @@
 import { ReportDef } from "../types";
 import { LIST, ESTADO_4, TANQUES_ALMACENAMIENTO } from "../options";
 
+const VOLUMEN_PORRON = 20;
+
 export const po07: ReportDef = {
   code: "PO-07",
   title: "Reporte llenado de porrón",
@@ -33,22 +35,27 @@ export const po07: ReportDef = {
           showIf: (v) => v.presentaDanos === true,
           required: true,
         },
+        {
+          id: "tipoDanoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.tipoDano === "Otro",
+          required: true,
+        },
         { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
-      ],
-    },
-    {
-      id: "sellado",
-      title: "Sellado",
-      fields: [
-        { id: "numeroSello", label: "Número de sello (si aplica)", type: "text" },
-        { id: "selloColocadoBien", label: "¿El sello quedó correctamente colocado?", type: "boolean", required: true },
       ],
     },
     {
       id: "llenado",
       title: "Llenado",
       fields: [
-        { id: "volumenPorPorron", label: "Volumen por porrón", type: "number", unit: "L", min: 0, required: true },
+        {
+          // Los porrones son de 20 L; el dato viene del envase, no se mide.
+          id: "volumenPorPorron",
+          label: "Volumen por porrón",
+          type: "calculated",
+          calculate: () => VOLUMEN_PORRON,
+        },
         { id: "numeroPorronesLlenados", label: "Número de porrones llenados", type: "number", min: 0, required: true },
         { id: "todosLlenadosBien", label: "¿Todos los porrones fueron llenados correctamente?", type: "boolean", required: true },
         {
@@ -80,6 +87,13 @@ export const po07: ReportDef = {
           type: "select",
           options: ["Derrame", "Fuga", "Problema en bomba", "Problema en manguera", "Porrón dañado", "Otro"].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.anomalia === true,
+          required: true,
+        },
+        {
+          id: "tipoAnomaliaOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.tipoAnomalia === "Otro",
           required: true,
         },
         { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },

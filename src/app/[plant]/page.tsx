@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardList, FlaskConical, Camera, Download, Images, ChevronLeft } from "lucide-react";
+import { ClipboardList, FlaskConical, Camera, Download, Images, Route, ChevronLeft } from "lucide-react";
 import { getPlant } from "@/lib/plants";
 import { REPORTS } from "@/lib/reports/schemas";
 
@@ -41,6 +41,16 @@ export default async function PlantPage({ params }: { params: Promise<{ plant: s
         >
           <span className="flex items-center gap-2 font-medium">
             <Images size={18} /> Ver evidencias fotográficas
+          </span>
+          <ChevronLeft size={16} className="rotate-180" />
+        </Link>
+
+        <Link
+          href={`/${plant.slug}/trazabilidad`}
+          className="flex flex-1 items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900 transition hover:border-amber-300 hover:bg-amber-100"
+        >
+          <span className="flex items-center gap-2 font-medium">
+            <Route size={18} /> Rastrear un lote
           </span>
           <ChevronLeft size={16} className="rotate-180" />
         </Link>

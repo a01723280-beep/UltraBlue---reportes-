@@ -38,6 +38,13 @@ export const pc01: ReportDef = {
           required: true,
         },
         {
+          id: "colorProductoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.colorProducto === "Otro",
+          required: true,
+        },
+        {
           id: "olorProducto",
           label: "Olor del producto",
           type: "select",
@@ -55,6 +62,13 @@ export const pc01: ReportDef = {
           type: "select",
           options: ["Tierra", "Polvo", "Aceite", "Material extraño", "Otro"].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.contaminacion === true,
+          required: true,
+        },
+        {
+          id: "tipoContaminacionOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.tipoContaminacion === "Otro",
           required: true,
         },
       ],
@@ -97,7 +111,6 @@ export const pc01: ReportDef = {
       fields: [
         { id: "enviadaLaboratorio", label: "¿La muestra fue enviada al laboratorio?", type: "boolean", required: true },
         { id: "fechaEnvio", label: "Fecha de envío", type: "date", showIf: (v) => v.enviadaLaboratorio === true },
-        { id: "responsableLaboratorio", label: "Responsable del laboratorio", type: "master-select", listKey: LIST.responsablesLaboratorio, showIf: (v) => v.enviadaLaboratorio === true },
         {
           id: "estadoAnalisis",
           label: "Estado del análisis",
@@ -115,6 +128,13 @@ export const pc01: ReportDef = {
           type: "select",
           options: ["Concentración fuera de especificación", "Contaminación", "Humedad", "Color", "Otro"].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.estadoAnalisis === "Rechazado",
+          required: true,
+        },
+        {
+          id: "motivoRechazoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.motivoRechazo === "Otro",
           required: true,
         },
       ],

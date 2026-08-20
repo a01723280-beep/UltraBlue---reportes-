@@ -89,6 +89,9 @@ export default function DynamicForm({ report, plant, initialLists }: DynamicForm
   const [lists, setLists] = useState<Record<string, string[]>>(initialLists);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // El lote que el servidor acaba de emitir; el operador lo necesita para
+  // rotular el tanque, así que se muestra hasta que empiece el siguiente.
+  const [loteAsignado, setLoteAsignado] = useState<string | null>(null);
   const defaultValues = useMemo(() => buildDefaultValues(report), [report]);
 
   const {
@@ -145,6 +148,8 @@ export default function DynamicForm({ report, plant, initialLists }: DynamicForm
         }),
       });
       if (!res.ok) throw new Error("save-failed");
+      const body = (await res.json()) as { loteProduccion?: string | null };
+      setLoteAsignado(body.loteProduccion ?? null);
       setStatus("saved");
       reset(buildDefaultValues(report));
     } catch {
@@ -184,8 +189,16 @@ export default function DynamicForm({ report, plant, initialLists }: DynamicForm
       <div className="sticky bottom-4 flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:justify-between">
         <div className="text-sm">
           {status === "saved" && (
-            <span className="flex items-center gap-1.5 font-medium text-emerald-600">
-              <CheckCircle2 size={18} /> Reporte guardado correctamente.
+            <span className="flex flex-col gap-1">
+              <span className="flex items-center gap-1.5 font-medium text-emerald-600">
+                <CheckCircle2 size={18} /> Reporte guardado correctamente.
+              </span>
+              {loteAsignado && (
+                <span className="text-slate-600">
+                  Lote de producción asignado:{" "}
+                  <strong className="font-mono font-semibold text-slate-900">{loteAsignado}</strong>
+                </span>
+              )}
             </span>
           )}
           {status === "error" && (

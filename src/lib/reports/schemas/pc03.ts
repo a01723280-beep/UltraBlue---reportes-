@@ -1,25 +1,6 @@
 import { ReportDef } from "../types";
 import { LIST, TANQUES_ALMACENAMIENTO } from "../options";
 
-const ORIGENES_MUESTRA = [
-  "Tanque Agua Cruda 1",
-  "Tanque Agua Cruda 2",
-  "Tanque Agua Cruda 3",
-  "Tanque Agua Desionizada 1",
-  "Tanque Agua Desionizada 2",
-  "Mixer",
-  "Salida Filtro de Bolsa (25 μm)",
-  "Salida Microfiltro",
-  "TDEF-1",
-  "TDEF-2",
-  "TDEF-3",
-  "TDEF-4",
-  "Pipa",
-  "Tote",
-  "Tambo",
-  "Porrón",
-].map((v) => ({ value: v, label: v }));
-
 export const pc03: ReportDef = {
   code: "PC-03",
   title: "Reporte de control de muestras",
@@ -48,7 +29,15 @@ export const pc03: ReportDef = {
           options: ["Producción", "Materia prima", "Producto terminado", "Retención", "Reclamo de cliente", "Investigación"].map((v) => ({ value: v, label: v })),
           required: true,
         },
-        { id: "origenMuestra", label: "Origen de la muestra", type: "select", options: ORIGENES_MUESTRA, required: true },
+        {
+          // El origen de la muestra es el lote del que salió, así que se
+          // elige de la misma lista de lotes que usa el resto de la cadena.
+          id: "origenMuestra",
+          label: "Origen de la muestra (No. de lote)",
+          type: "master-select",
+          listKey: LIST.lotesProduccion,
+          required: true,
+        },
         { id: "concentracionUrea", label: "Concentración de urea", type: "number", unit: "%", required: true },
       ],
     },
@@ -114,6 +103,13 @@ export const pc03: ReportDef = {
           type: "select",
           options: ["Concentración", "pH", "Peso específico", "Contaminación", "Otro"].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.resultado === "No conforme",
+          required: true,
+        },
+        {
+          id: "motivoNoConformeOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.motivoNoConforme === "Otro",
           required: true,
         },
         { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },

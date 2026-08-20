@@ -53,9 +53,13 @@ export const po01: ReportDef = {
           required: true,
         },
         {
+          // Se elige de la lista, no se escribe: PC-01 y PO-03 referencian
+          // este mismo lote, y si cada reporte lo teclea a su manera la
+          // cadena de trazabilidad no se puede cruzar.
           id: "numeroLoteProveedor",
           label: "Número de lote del proveedor",
-          type: "text",
+          type: "master-select",
+          listKey: LIST.lotesUreaMateriaPrima,
           required: true,
         },
         {
@@ -238,6 +242,13 @@ export const po01: ReportDef = {
             "Otro",
           ].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.materiaPrimaAprobada === false,
+          required: true,
+        },
+        {
+          id: "motivoRechazoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.motivoRechazo === "Otro",
           required: true,
         },
         { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },

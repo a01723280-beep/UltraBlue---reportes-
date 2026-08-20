@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isPlantSlug } from "@/lib/plants";
 import { getReportDef } from "@/lib/reports/schemas";
+import { LOTE_PRODUCCION_FIELD, MEZCLADO_REPORT, reservarLoteProduccion } from "@/lib/lote";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -20,6 +21,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Tipo de reporte desconocido." }, { status: 400 });
   }
 
+  // El lote lo asigna el servidor, no el navegador: es el identificador con
+  // el que después se rastrea el pedido, así que no puede depender de que dos
+  // operadores no coincidan.
+  let loteProduccion: string | null = null;
+  if (reportType === MEZCLADO_REPORT) {
+    loteProduccion = await reservarLoteProduccion(plant);
+    data[LOTE_PRODUCCION_FIELD] = loteProduccion;
+  }
+
   const submission = await prisma.reportSubmission.create({
     data: {
       reportType,
@@ -29,5 +39,5 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ id: submission.id }, { status: 201 });
+  return NextResponse.json({ id: submission.id, loteProduccion }, { status: 201 });
 }

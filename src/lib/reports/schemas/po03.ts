@@ -1,5 +1,5 @@
 import { ReportDef } from "../types";
-import { LIST } from "../options";
+import { LIST, TANQUES_MEZCLADO } from "../options";
 import { numOrNull } from "../util";
 
 const CONC_MIN = 31.8;
@@ -15,6 +15,17 @@ export const po03: ReportDef = {
       id: "general",
       title: "Información general",
       fields: [
+        {
+          // El mezclado es donde la urea recibida se convierte en DEF, así
+          // que es el único punto que puede emitir el lote de producción y
+          // enlazar la recepción con el envasado. El servidor lo asigna al
+          // guardar para que no se repita entre operadores.
+          id: "loteProduccion",
+          label: "Lote de producción generado",
+          type: "calculated",
+          help: "Se asigna automáticamente al guardar y queda disponible para los reportes de envasado.",
+          calculate: () => null,
+        },
         { id: "fecha", label: "Fecha", type: "date", required: true },
         { id: "horaInicio", label: "Hora de inicio", type: "time", required: true },
         { id: "horaFin", label: "Hora de finalización", type: "time", required: true },
@@ -28,8 +39,8 @@ export const po03: ReportDef = {
         {
           id: "tanque",
           label: "Tanque utilizado",
-          type: "master-select",
-          listKey: LIST.tanquesMezclado,
+          type: "select",
+          options: TANQUES_MEZCLADO,
           required: true,
         },
       ],
@@ -106,6 +117,13 @@ export const po03: ReportDef = {
           showIf: (v) => v.inicioCorrecto === false,
           required: true,
         },
+        {
+          id: "motivoNoInicioOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.motivoNoInicio === "Otro",
+          required: true,
+        },
         { id: "tiempoMezclado", label: "Tiempo de mezclado", type: "number", unit: "min", min: 0 },
       ],
     },
@@ -138,6 +156,13 @@ export const po03: ReportDef = {
             const c = numOrNull(v.concentracionObtenida);
             return c !== null && !(c >= CONC_MIN && c <= CONC_MAX);
           },
+        },
+        {
+          id: "ajusteRealizadoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.ajusteRealizado === "Otro",
+          required: true,
         },
         {
           id: "concentracionFinal",
@@ -183,6 +208,13 @@ export const po03: ReportDef = {
             "Otro",
           ].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.anomalia === true,
+          required: true,
+        },
+        {
+          id: "tipoAnomaliaOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.tipoAnomalia === "Otro",
           required: true,
         },
         { id: "comentarios", label: "Comentarios", type: "textarea" },

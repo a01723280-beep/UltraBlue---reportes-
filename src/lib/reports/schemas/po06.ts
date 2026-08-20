@@ -1,6 +1,8 @@
 import { ReportDef } from "../types";
 import { LIST, ESTADO_4, TANQUES_ALMACENAMIENTO } from "../options";
 
+const VOLUMEN_TAMBO = 200;
+
 export const po06: ReportDef = {
   code: "PO-06",
   title: "Reporte de envasado de tambo",
@@ -33,6 +35,13 @@ export const po06: ReportDef = {
           showIf: (v) => v.presentaDanos === true,
           required: true,
         },
+        {
+          id: "tipoDanoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.tipoDano === "Otro",
+          required: true,
+        },
         { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
       ],
     },
@@ -40,7 +49,7 @@ export const po06: ReportDef = {
       id: "sellado",
       title: "Sellado",
       fields: [
-        { id: "numeroSello", label: "Número de sello", type: "text", required: true },
+        { id: "numeroSello", label: "Sello", type: "text", required: true },
         { id: "selloColocadoBien", label: "¿El sello fue colocado correctamente?", type: "boolean", required: true },
       ],
     },
@@ -48,7 +57,14 @@ export const po06: ReportDef = {
       id: "llenado",
       title: "Llenado",
       fields: [
-        { id: "volumenPorTambo", label: "Volumen por tambo", type: "number", unit: "L", min: 0, required: true },
+        {
+          // Todos los tambos son de 200 L: es un dato del envase, no una
+          // medición, así que se muestra fijo en vez de pedirlo cada vez.
+          id: "volumenPorTambo",
+          label: "Volumen por tambo",
+          type: "calculated",
+          calculate: () => VOLUMEN_TAMBO,
+        },
         { id: "numeroTambosLlenados", label: "Número de tambos llenados", type: "number", min: 0, required: true },
         { id: "todosLlenadosBien", label: "¿Todos los tambos fueron llenados correctamente?", type: "boolean", required: true },
         {
@@ -80,6 +96,13 @@ export const po06: ReportDef = {
           type: "select",
           options: ["Derrame", "Fuga", "Problema en bomba", "Problema en manguera", "Tambo dañado", "Otro"].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.anomalia === true,
+          required: true,
+        },
+        {
+          id: "tipoAnomaliaOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.tipoAnomalia === "Otro",
           required: true,
         },
         { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },

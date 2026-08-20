@@ -1,5 +1,9 @@
 import { ReportDef } from "../types";
 import { LIST } from "../options";
+import { numOrNull } from "../util";
+
+const PH_MIN = 9;
+const PH_MAX = 10;
 
 export const po09: ReportDef = {
   code: "PO-09",
@@ -88,7 +92,20 @@ export const po09: ReportDef = {
       id: "calidadAgua",
       title: "Calidad del agua",
       fields: [
-        { id: "ph", label: "pH", type: "number", step: 0.01, required: true },
+        {
+          id: "ph",
+          label: `pH (especificación ${PH_MIN}–${PH_MAX})`,
+          type: "number",
+          step: 0.01,
+          required: true,
+          alertIf: (v) => {
+            const x = numOrNull(v.ph);
+            if (x === null) return null;
+            return x < PH_MIN || x > PH_MAX
+              ? `⚠️ pH fuera de especificación (${PH_MIN}–${PH_MAX}).`
+              : null;
+          },
+        },
         {
           id: "conductividadAlimentacion",
           label: "Conductividad alimentación",
