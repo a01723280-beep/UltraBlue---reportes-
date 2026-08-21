@@ -1,7 +1,5 @@
 import { ReportDef } from "../types";
-import { LIST, ESTADO_4, TANQUES_ALMACENAMIENTO } from "../options";
-
-const VOLUMEN_TOTE = 1000;
+import { LIST, TANQUES_ALMACENAMIENTO } from "../options";
 
 export const po05: ReportDef = {
   code: "PO-05",
@@ -20,39 +18,16 @@ export const po05: ReportDef = {
       ],
     },
     {
-      id: "inspeccion-ibc",
-      title: "Inspección del IBC",
-      fields: [
-        { id: "limpioExterno", label: "¿El IBC está limpio externamente?", type: "boolean", required: true },
-        { id: "limpioInterno", label: "¿El IBC está limpio internamente?", type: "boolean", required: true },
-        { id: "estadoGeneral", label: "Estado general del IBC", type: "select", options: ESTADO_4, required: true },
-        { id: "presentaDanos", label: "¿El IBC presenta daños?", type: "boolean", required: true },
-        {
-          id: "tipoDano",
-          label: "Tipo de daño",
-          type: "select",
-          options: ["Golpe", "Grieta", "Jaula dañada", "Válvula dañada", "Otro"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.presentaDanos === true,
-          required: true,
-        },
-        {
-          id: "tipoDanoOtro",
-          label: "¿Cuál?",
-          type: "text",
-          showIf: (v) => v.tipoDano === "Otro",
-          required: true,
-        },
-        { id: "valvulaFunciona", label: "¿La válvula funciona correctamente?", type: "boolean", required: true },
-        { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
-      ],
-    },
-    {
       id: "sellado",
       title: "Sellado",
       fields: [
-        { id: "numeroSello", label: "Número de sello 1", type: "text", required: true },
-        { id: "numeroSello2", label: "Número de sello 2", type: "text", required: true },
-        { id: "selloColocadoBien", label: "¿Se colocaron correctamente ambos sellos?", type: "boolean", required: true },
+        { id: "numeroSello1", label: "Número de sello 1", type: "text" },
+        { id: "numeroSello2", label: "Número de sello 2", type: "text" },
+        { id: "numeroSello3", label: "Número de sello 3", type: "text" },
+        { id: "numeroSello4", label: "Número de sello 4", type: "text" },
+        { id: "numeroSello5", label: "Número de sello 5", type: "text" },
+        { id: "numeroSello6", label: "Número de sello 6", type: "text" },
+        { id: "selloColocadoBien", label: "¿Los sellos quedaron correctamente colocados?", type: "boolean", required: true },
       ],
     },
     {
@@ -68,23 +43,30 @@ export const po05: ReportDef = {
       title: "Llenado",
       fields: [
         {
-          // El IBC es de volumen fijo, igual que el tambo: es un dato del
-          // envase, no una medición que haya que capturar cada vez.
+          // El mismo tote sirve para DEF o para agua, y viene en dos
+          // capacidades: ambas cosas cambian qué se despachó, así que se
+          // registran en vez de asumirse.
+          id: "contenido",
+          label: "Contenido",
+          type: "select",
+          options: [
+            { value: "DEF (urea)", label: "DEF (urea)" },
+            { value: "Agua", label: "Agua" },
+          ],
+          required: true,
+        },
+        {
           id: "volumenPorTote",
           label: "Volumen por tote",
-          type: "calculated",
-          calculate: () => VOLUMEN_TOTE,
+          type: "select",
+          options: [
+            { value: "1000", label: "1000 L" },
+            { value: "1200", label: "1200 L" },
+          ],
+          required: true,
         },
         { id: "numeroTotesLlenados", label: "Número de totes llenados", type: "number", min: 0, required: true },
         { id: "todosLlenadosBien", label: "¿Todos los totes fueron llenados correctamente?", type: "boolean", required: true },
-        {
-          id: "totesConProblemas",
-          label: "¿Cuántos totes presentaron problemas?",
-          type: "number",
-          min: 0,
-          showIf: (v) => v.todosLlenadosBien === false,
-          required: true,
-        },
       ],
     },
     {

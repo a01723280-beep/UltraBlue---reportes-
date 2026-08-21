@@ -1,5 +1,5 @@
 import { ReportDef } from "../types";
-import { LIST } from "../options";
+import { LIST, ESTADO_4 } from "../options";
 import { numOrNull } from "../util";
 
 export const po02: ReportDef = {
@@ -74,8 +74,35 @@ export const po02: ReportDef = {
       ],
     },
     {
+      id: "inspeccion-ibc",
+      title: "Inspección del IBC",
+      fields: [
+        { id: "limpioExterno", label: "¿El IBC está limpio externamente?", type: "boolean", required: true },
+        { id: "limpioInterno", label: "¿El IBC está limpio internamente?", type: "boolean", required: true },
+        { id: "estadoGeneral", label: "Estado general del IBC", type: "select", options: ESTADO_4, required: true },
+        { id: "presentaDanos", label: "¿El IBC presenta daños?", type: "boolean", required: true },
+        {
+          id: "tipoDano",
+          label: "Tipo de daño",
+          type: "select",
+          options: ["Golpe", "Grieta", "Jaula dañada", "Válvula dañada", "Otro"].map((v) => ({ value: v, label: v })),
+          showIf: (v) => v.presentaDanos === true,
+          required: true,
+        },
+        {
+          id: "tipoDanoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.tipoDano === "Otro",
+          required: true,
+        },
+        { id: "valvulaFunciona", label: "¿La válvula funciona correctamente?", type: "boolean", required: true },
+        { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
+      ],
+    },
+    {
       id: "inspeccion",
-      title: "Inspección",
+      title: "Aceptación",
       fields: [
         { id: "totesRechazados", label: "Número de totes rechazados", type: "number", required: true },
         {

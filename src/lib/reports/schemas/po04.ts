@@ -61,7 +61,6 @@ export const po04: ReportDef = {
         { id: "placas", label: "Placas", type: "text", required: true },
         { id: "transportista", label: "Transportista", type: "master-select", listKey: LIST.transportistas, required: true },
         { id: "operadorTransporte", label: "Operador del transporte", type: "master-select", listKey: LIST.operadoresTransporte, required: true },
-        { id: "cliente", label: "Cliente", type: "master-select", listKey: LIST.clientes, required: true },
       ],
     },
     {

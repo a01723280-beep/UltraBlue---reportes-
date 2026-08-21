@@ -1,7 +1,7 @@
 import { ReportDef } from "../types";
 import { LIST, ESTADO_4, TANQUES_ALMACENAMIENTO } from "../options";
 
-const VOLUMEN_TAMBO = 200;
+const VOLUMEN_TAMBO_HABITUAL = 200;
 
 export const po06: ReportDef = {
   code: "PO-06",
@@ -46,24 +46,19 @@ export const po06: ReportDef = {
       ],
     },
     {
-      id: "sellado",
-      title: "Sellado",
-      fields: [
-        { id: "numeroSello", label: "Sello", type: "text", required: true },
-        { id: "selloColocadoBien", label: "¿El sello fue colocado correctamente?", type: "boolean", required: true },
-      ],
-    },
-    {
       id: "llenado",
       title: "Llenado",
       fields: [
         {
-          // Todos los tambos son de 200 L: es un dato del envase, no una
-          // medición, así que se muestra fijo en vez de pedirlo cada vez.
+          // 200 L es lo habitual, pero no siempre: se precarga y el operador
+          // lo corrige cuando el tambo va a otra capacidad.
           id: "volumenPorTambo",
           label: "Volumen por tambo",
-          type: "calculated",
-          calculate: () => VOLUMEN_TAMBO,
+          type: "number",
+          unit: "L",
+          min: 0,
+          defaultValue: VOLUMEN_TAMBO_HABITUAL,
+          required: true,
         },
         { id: "numeroTambosLlenados", label: "Número de tambos llenados", type: "number", min: 0, required: true },
         { id: "todosLlenadosBien", label: "¿Todos los tambos fueron llenados correctamente?", type: "boolean", required: true },

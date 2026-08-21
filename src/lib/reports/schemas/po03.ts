@@ -57,15 +57,6 @@ export const po03: ReportDef = {
           required: true,
         },
         { id: "bolsasUtilizadas", label: "¿Cuántas bolsas se utilizaron?", type: "number", min: 0, required: true },
-        { id: "loteCompleto", label: "¿Se utilizó el lote completo?", type: "boolean", required: true },
-        {
-          id: "bolsasDisponibles",
-          label: "¿Cuántas bolsas quedaron disponibles?",
-          type: "number",
-          min: 0,
-          showIf: (v) => v.loteCompleto === false,
-          required: true,
-        },
       ],
     },
     {
