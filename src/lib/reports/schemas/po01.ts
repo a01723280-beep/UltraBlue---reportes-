@@ -103,6 +103,7 @@ export const po01: ReportDef = {
             { value: "Blanco", label: "Blanco" },
             { value: "Blanco ligeramente amarillento", label: "Blanco ligeramente amarillento" },
             { value: "Amarillento", label: "Amarillento" },
+            { value: "Gris", label: "Gris" },
           ],
           required: true,
         },
@@ -203,14 +204,6 @@ export const po01: ReportDef = {
           id: "numeroMuestra",
           label: "Número de muestra",
           type: "auto-number",
-          showIf: (v) => v.seTomoMuestra === true,
-        },
-        {
-          id: "porcentajeMuestra",
-          label: "Porcentaje de muestra tomada",
-          type: "number",
-          unit: "%",
-          defaultValue: 20,
           showIf: (v) => v.seTomoMuestra === true,
         },
         {

@@ -1,6 +1,8 @@
 import { ReportDef } from "../types";
 import { LIST, ESTADO_4, TANQUES_ALMACENAMIENTO } from "../options";
 
+const VOLUMEN_TOTE = 1000;
+
 export const po05: ReportDef = {
   code: "PO-05",
   title: "Reporte de envasado de tote (IBC)",
@@ -65,8 +67,24 @@ export const po05: ReportDef = {
       id: "llenado",
       title: "Llenado",
       fields: [
-        { id: "litrosCargados", label: "Litros cargados", type: "number", unit: "L", min: 0, required: true },
-        { id: "coincideOrden", label: "¿La cantidad cargada coincide con la orden?", type: "boolean", required: true },
+        {
+          // El IBC es de volumen fijo, igual que el tambo: es un dato del
+          // envase, no una medición que haya que capturar cada vez.
+          id: "volumenPorTote",
+          label: "Volumen por tote",
+          type: "calculated",
+          calculate: () => VOLUMEN_TOTE,
+        },
+        { id: "numeroTotesLlenados", label: "Número de totes llenados", type: "number", min: 0, required: true },
+        { id: "todosLlenadosBien", label: "¿Todos los totes fueron llenados correctamente?", type: "boolean", required: true },
+        {
+          id: "totesConProblemas",
+          label: "¿Cuántos totes presentaron problemas?",
+          type: "number",
+          min: 0,
+          showIf: (v) => v.todosLlenadosBien === false,
+          required: true,
+        },
       ],
     },
     {
