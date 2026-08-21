@@ -16,6 +16,14 @@ export const ESTADO_BOLSAS: FieldOption[] = [
   { value: "Dañada", label: "Dañada" },
 ];
 
+// El agua recorre tres etapas y cada una tiene sus propios tanques:
+//
+//   TAC1-3  agua cruda        -> ósmosis ->  T1-T2  agua desionizada
+//   T1-T2   + urea            -> mezclado ->  TDEF-1..4  producto terminado
+//
+// Se listan con la nomenclatura que llevan rotulada en planta, para que el
+// operador elija leyendo la etiqueta y no traduciendo.
+
 /** Los mezcladores de la planta, con el nombre que se les da en piso. */
 export const TANQUES_MEZCLADO: FieldOption[] = [
   { value: "Rusia tanque 1", label: "Rusia tanque 1" },
@@ -23,6 +31,18 @@ export const TANQUES_MEZCLADO: FieldOption[] = [
   { value: "Brasil tanque 2", label: "Brasil tanque 2" },
 ];
 
+export const TANQUES_AGUA_CRUDA: FieldOption[] = [
+  { value: "TAC1", label: "TAC1" },
+  { value: "TAC2", label: "TAC2" },
+  { value: "TAC3", label: "TAC3" },
+];
+
+export const TANQUES_AGUA_DESIONIZADA: FieldOption[] = [
+  { value: "T1", label: "T1" },
+  { value: "T2", label: "T2" },
+];
+
+/** Producto terminado (DEF). */
 export const TANQUES_ALMACENAMIENTO: FieldOption[] = [
   { value: "TDEF-1", label: "TDEF-1" },
   { value: "TDEF-2", label: "TDEF-2" },
@@ -41,7 +61,6 @@ export const LIST = {
   choferes: "choferes",
   ordenesCompra: "ordenes_compra",
   tanquesMezclado: "tanques_mezclado",
-  tanquesAguaCruda: "tanques_agua_cruda",
   lotesUreaMateriaPrima: "lotes_urea_materia_prima",
   lotesProduccion: "lotes_produccion",
   transportistas: "transportistas",

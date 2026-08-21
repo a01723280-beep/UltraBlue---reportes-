@@ -14,7 +14,6 @@ const BASE_DATA: Record<string, string[]> = {
   [LIST.choferes]: [],
   [LIST.ordenesCompra]: [],
   [LIST.tanquesMezclado]: ["Mixer 1", "Mixer 2"],
-  [LIST.tanquesAguaCruda]: ["Tanque Agua Cruda 1", "Tanque Agua Cruda 2", "Tanque Agua Cruda 3"],
   [LIST.lotesUreaMateriaPrima]: [],
   [LIST.lotesProduccion]: [],
   [LIST.transportistas]: [],

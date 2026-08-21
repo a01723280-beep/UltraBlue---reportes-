@@ -1,5 +1,5 @@
 import { ReportDef } from "../types";
-import { LIST } from "../options";
+import { LIST, TANQUES_AGUA_CRUDA, TANQUES_AGUA_DESIONIZADA } from "../options";
 import { numOrNull } from "../util";
 
 const PH_MIN = 9;
@@ -31,6 +31,29 @@ export const po09: ReportDef = {
             { value: "Ósmosis 1", label: "Ósmosis 1" },
             { value: "Ósmosis 2", label: "Ósmosis 2" },
           ],
+          required: true,
+        },
+      ],
+    },
+    {
+      // La ósmosis es donde el agua cruda se vuelve desionizada. Sin anotar
+      // de qué tanque toma y cuál llena, el agua que entra al mezclado no se
+      // puede ligar hacia atrás con la que se trató aquí.
+      id: "tanques",
+      title: "Tanques",
+      fields: [
+        {
+          id: "tanqueOrigen",
+          label: "Tanque de agua cruda (origen)",
+          type: "select",
+          options: TANQUES_AGUA_CRUDA,
+          required: true,
+        },
+        {
+          id: "tanqueDestino",
+          label: "Tanque de agua desionizada (destino)",
+          type: "select",
+          options: TANQUES_AGUA_DESIONIZADA,
           required: true,
         },
       ],

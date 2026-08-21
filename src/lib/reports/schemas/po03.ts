@@ -1,5 +1,5 @@
 import { ReportDef } from "../types";
-import { LIST, TANQUES_MEZCLADO } from "../options";
+import { LIST, TANQUES_MEZCLADO, TANQUES_AGUA_DESIONIZADA } from "../options";
 import { numOrNull } from "../util";
 
 const CONC_MIN = 31.8;
@@ -73,10 +73,12 @@ export const po03: ReportDef = {
       title: "Agua",
       fields: [
         {
+          // Al mixer entra agua ya desionizada, no cruda: registrar el TAC
+          // aquí apuntaba a un tanque por el que el agua ya había pasado.
           id: "tanqueAgua",
-          label: "¿Qué tanque de agua se utilizó?",
-          type: "master-select",
-          listKey: LIST.tanquesAguaCruda,
+          label: "¿Qué tanque de agua desionizada se utilizó?",
+          type: "select",
+          options: TANQUES_AGUA_DESIONIZADA,
           required: true,
         },
         { id: "m3Agua", label: "¿Cuántos m³ de agua se utilizaron?", type: "number", min: 0, unit: "m³", required: true },
