@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import {
   ClipboardList,
   FlaskConical,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { getPlant } from "@/lib/plants";
 import { REPORTS } from "@/lib/reports/schemas";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 
 export default async function PlantPage({ params }: { params: Promise<{ plant: string }> }) {
   const { plant: plantSlug } = await params;
@@ -22,6 +24,14 @@ export default async function PlantPage({ params }: { params: Promise<{ plant: s
   const operacion = REPORTS.filter((r) => r.category === "operacion");
   const calidad = REPORTS.filter((r) => r.category === "calidad");
   const evidencias = REPORTS.filter((r) => r.category === "evidencias");
+
+  // Las opciones administrativas ni siquiera se listan sin la sesión: al
+  // operador no le sirve ver cuatro accesos que no puede abrir.
+  const cookieStore = await cookies();
+  const esAdmin = await verifySessionToken(
+    "admin",
+    cookieStore.get(SESSION_COOKIE.admin)?.value
+  );
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
@@ -34,36 +44,48 @@ export default async function PlantPage({ params }: { params: Promise<{ plant: s
         <p className="text-slate-500">Elige el reporte que vas a llenar.</p>
       </div>
 
-      {/* Consultar y borrar lo capturado pide una segunda contraseña, así que
-          se agrupa y se rotula para que el operador sepa que no es para él. */}
-      <section className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          <ShieldCheck size={14} /> Solo administración
-        </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <AdminLink
-            href={`/${plant.slug}/descargas`}
-            icon={<Download size={18} />}
-            label="Descargar reportes en Excel"
-          />
-          <AdminLink
-            href={`/${plant.slug}/evidencias`}
-            icon={<Images size={18} />}
-            label="Ver evidencias fotográficas"
-          />
-          <AdminLink
-            href={`/${plant.slug}/trazabilidad`}
-            icon={<Route size={18} />}
-            label="Rastrear un lote"
-          />
-          <AdminLink
-            href={`/${plant.slug}/registros`}
-            icon={<Trash2 size={18} />}
-            label="Borrar registros"
-            destructivo
-          />
-        </div>
-      </section>
+      {esAdmin ? (
+        <section className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <ShieldCheck size={14} /> Administración
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <AdminLink
+              href={`/${plant.slug}/descargas`}
+              icon={<Download size={18} />}
+              label="Descargar reportes en Excel"
+            />
+            <AdminLink
+              href={`/${plant.slug}/evidencias`}
+              icon={<Images size={18} />}
+              label="Ver evidencias fotográficas"
+            />
+            <AdminLink
+              href={`/${plant.slug}/trazabilidad`}
+              icon={<Route size={18} />}
+              label="Rastrear un lote"
+            />
+            <AdminLink
+              href={`/${plant.slug}/registros`}
+              icon={<Trash2 size={18} />}
+              label="Borrar registros"
+              destructivo
+            />
+          </div>
+        </section>
+      ) : (
+        // Sin sesión administrativa solo se ofrece la puerta, no lo que hay
+        // detrás: enumerar accesos que el operador no puede abrir estorba.
+        <Link
+          href={`/admin?next=/${plant.slug}`}
+          className="mb-8 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <ShieldCheck size={18} /> Acceso administrativo
+          </span>
+          <ChevronLeft size={16} className="rotate-180 opacity-50" />
+        </Link>
+      )}
 
       <ReportGroup title="Reportes de operación" icon={<ClipboardList size={18} />} reports={operacion} plant={plant.slug} />
       <ReportGroup title="Reportes de calidad" icon={<FlaskConical size={18} />} reports={calidad} plant={plant.slug} />
