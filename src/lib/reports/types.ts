@@ -54,6 +54,18 @@ export interface SectionDef {
   title: string;
   fields: FieldDef[];
   showIf?: (values: FormValues) => boolean;
+  /** Cuando está presente, la sección se captura como una lista de entradas
+   * iguales — por ejemplo un envasado repartido entre varios clientes, cada
+   * uno con su cantidad y su orden de venta. Las respuestas se guardan como
+   * un arreglo bajo el id de la sección, no como campos sueltos. */
+  repetible?: {
+    /** Texto del botón que agrega otra entrada. */
+    agregar: string;
+    /** Cómo nombrar cada entrada en pantalla: "Cliente 1", "Cliente 2"… */
+    singular: string;
+    /** Entradas mínimas; por debajo no se puede quitar. */
+    minimo?: number;
+  };
 }
 
 export type ReportCategory = "operacion" | "calidad" | "evidencias";

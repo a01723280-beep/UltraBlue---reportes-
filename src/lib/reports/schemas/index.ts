@@ -39,6 +39,13 @@ export function getReportDef(code: string): ReportDef | undefined {
   return REPORTS.find((r) => r.code.toLowerCase() === code.toLowerCase());
 }
 
+/** Campos que ocupan una columna propia. Excluye las secciones repetibles,
+ * que no tienen un número fijo de entradas y se resumen aparte. */
 export function allFieldsOf(report: ReportDef) {
-  return report.sections.flatMap((s) => s.fields);
+  return report.sections.filter((s) => !s.repetible).flatMap((s) => s.fields);
+}
+
+/** Las secciones que se capturan como lista. */
+export function repeatableSectionsOf(report: ReportDef) {
+  return report.sections.filter((s) => s.repetible);
 }

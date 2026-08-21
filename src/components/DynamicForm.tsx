@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useForm, Controller, FieldValues } from "react-hook-form";
-import { AlertTriangle, Camera, CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
-import { ReportDef, FieldDef, FormValues } from "@/lib/reports/types";
+import { useForm, useFieldArray, Controller, FieldValues, FieldErrors, Control } from "react-hook-form";
+import { AlertTriangle, Camera, CheckCircle2, ImagePlus, Loader2, Plus, X } from "lucide-react";
+import { ReportDef, FieldDef, SectionDef, FormValues } from "@/lib/reports/types";
 import { generateFolio } from "@/lib/folio";
 import MasterSelect from "./MasterSelect";
 import SignaturePad from "./SignaturePad";
@@ -27,6 +27,11 @@ function nowTime() {
 function buildDefaultValues(report: ReportDef): FormValues {
   const values: FormValues = {};
   for (const section of report.sections) {
+    if (section.repetible) {
+      const minimo = section.repetible.minimo ?? 1;
+      values[section.id] = Array.from({ length: minimo }, () => entradaVacia(section));
+      continue;
+    }
     for (const field of section.fields) {
       if (field.type === "date") values[field.id] = today();
       else if (field.type === "time") values[field.id] = nowTime();
@@ -37,6 +42,18 @@ function buildDefaultValues(report: ReportDef): FormValues {
     }
   }
   return values;
+}
+
+/** Una entrada en blanco de una sección repetible. */
+function entradaVacia(section: SectionDef): FormValues {
+  const fila: FormValues = {};
+  for (const field of section.fields) {
+    if (field.defaultValue !== undefined) fila[field.id] = field.defaultValue;
+    else if (field.type === "boolean") fila[field.id] = null;
+    else if (field.type === "photo") fila[field.id] = [];
+    else fila[field.id] = "";
+  }
+  return fila;
 }
 
 async function fileToDataUrl(file: File): Promise<string> {
@@ -124,6 +141,24 @@ export default function DynamicForm({ report, plant, initialLists }: DynamicForm
     const payload: FormValues = {};
     for (const section of report.sections) {
       if (section.showIf && !section.showIf(formValues as FormValues)) continue;
+
+      if (section.repetible) {
+        // Cada entrada se guarda completa bajo el id de la sección, para que
+        // el reparto entre clientes siga siendo legible como una lista.
+        const entradas = (formValues[section.id] as FormValues[] | undefined) ?? [];
+        payload[section.id] = entradas.map((entrada) => {
+          const fila: FormValues = {};
+          for (const field of section.fields) {
+            fila[field.id] =
+              field.type === "calculated"
+                ? field.calculate?.(entrada) ?? null
+                : entrada[field.id] ?? null;
+          }
+          return fila;
+        });
+        continue;
+      }
+
       for (const field of section.fields) {
         if (field.showIf && !field.showIf(formValues as FormValues)) continue;
         if (field.type === "calculated") {
@@ -162,6 +197,23 @@ export default function DynamicForm({ report, plant, initialLists }: DynamicForm
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {report.sections.map((section) => {
         if (section.showIf && !section.showIf(values)) return null;
+
+        if (section.repetible) {
+          return (
+            <RepeatableSection
+              key={section.id}
+              section={section}
+              plant={plant}
+              register={register}
+              control={control}
+              errors={errors}
+              lists={lists}
+              updateListOptions={updateListOptions}
+              values={values}
+            />
+          );
+        }
+
         const visibleFields = section.fields.filter((f) => !f.showIf || f.showIf(values));
         if (visibleFields.length === 0) return null;
         return (
@@ -172,6 +224,7 @@ export default function DynamicForm({ report, plant, initialLists }: DynamicForm
                 <FieldRenderer
                   key={field.id}
                   field={field}
+                  name={field.id}
                   plant={plant}
                   values={values}
                   register={register}
@@ -221,8 +274,96 @@ export default function DynamicForm({ report, plant, initialLists }: DynamicForm
   );
 }
 
+
+/** Sección que se captura como lista: cada entrada repite los mismos campos.
+ * Sirve para un envasado repartido entre varios clientes, donde cada uno
+ * lleva su cantidad y su orden de venta. */
+function RepeatableSection({
+  section,
+  plant,
+  register,
+  control,
+  errors,
+  lists,
+  updateListOptions,
+  values,
+}: {
+  section: SectionDef;
+  plant: string;
+  register: ReturnType<typeof useForm>["register"];
+  control: Control<FieldValues>;
+  errors: FieldErrors;
+  lists: Record<string, string[]>;
+  updateListOptions: (listKey: string, options: string[]) => void;
+  values: FormValues;
+}) {
+  const { fields, append, remove } = useFieldArray({ control, name: section.id });
+  const minimo = section.repetible?.minimo ?? 1;
+  const entradas = (values[section.id] as FormValues[] | undefined) ?? [];
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="mb-4 text-base font-semibold text-slate-900">{section.title}</h2>
+
+      <div className="flex flex-col gap-4">
+        {fields.map((row, index) => {
+          // Las condiciones se evalúan contra la entrada, no contra todo el
+          // formulario: "¿cuál?" de la fila 2 mira el select de la fila 2.
+          const entrada = entradas[index] ?? {};
+          const visibles = section.fields.filter((f) => !f.showIf || f.showIf(entrada));
+          return (
+            <div key={row.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {section.repetible?.singular} {index + 1}
+                </span>
+                {fields.length > minimo && (
+                  <button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
+                  >
+                    <X size={14} /> Quitar
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {visibles.map((field) => (
+                  <FieldRenderer
+                    key={field.id}
+                    field={field}
+                    name={`${section.id}.${index}.${field.id}`}
+                    plant={plant}
+                    values={entrada}
+                    register={register}
+                    control={control}
+                    errors={errors}
+                    lists={lists}
+                    updateListOptions={updateListOptions}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => append(entradaVacia(section))}
+        className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+      >
+        <Plus size={16} /> {section.repetible?.agregar}
+      </button>
+    </section>
+  );
+}
+
 interface FieldRendererProps {
   field: FieldDef;
+  /** Ruta del campo en el formulario. Coincide con el id salvo dentro de una
+   * sección repetible, donde va prefijada: "clientes.0.cliente". */
+  name: string;
   plant: string;
   values: FormValues;
   register: ReturnType<typeof useForm>["register"];
@@ -234,6 +375,7 @@ interface FieldRendererProps {
 
 function FieldRenderer({
   field,
+  name,
   plant,
   values,
   register,
@@ -243,12 +385,12 @@ function FieldRenderer({
   updateListOptions,
 }: FieldRendererProps) {
   const wide = field.type === "textarea" || field.type === "signature" || field.type === "photo";
-  const error = errors[field.id];
+  const error = hasErrorAt(errors, name);
   const alert = field.alertIf ? field.alertIf(values) : null;
 
   return (
     <div className={wide ? "sm:col-span-2" : ""}>
-      <label htmlFor={field.id} className="mb-1.5 block text-sm font-medium text-slate-700">
+      <label htmlFor={name} className="mb-1.5 block text-sm font-medium text-slate-700">
         {field.label}
         {field.required && <span className="ml-0.5 text-red-500">*</span>}
         {field.unit && <span className="ml-1 text-slate-400">({field.unit})</span>}
@@ -257,39 +399,39 @@ function FieldRenderer({
 
       {field.type === "text" && (
         <input
-          id={field.id}
+          id={name}
           type="text"
-          {...register(field.id, { required: field.required })}
+          {...register(name, { required: field.required })}
           className={inputClass}
         />
       )}
 
       {field.type === "textarea" && (
-        <textarea id={field.id} rows={3} {...register(field.id, { required: field.required })} className={inputClass} />
+        <textarea id={name} rows={3} {...register(name, { required: field.required })} className={inputClass} />
       )}
 
       {field.type === "number" && (
         <input
-          id={field.id}
+          id={name}
           type="number"
           step={field.step ?? "any"}
           min={field.min}
           max={field.max}
-          {...register(field.id, { required: field.required, valueAsNumber: true })}
+          {...register(name, { required: field.required, valueAsNumber: true })}
           className={inputClass}
         />
       )}
 
       {field.type === "date" && (
-        <input id={field.id} type="date" {...register(field.id, { required: field.required })} className={inputClass} />
+        <input id={name} type="date" {...register(name, { required: field.required })} className={inputClass} />
       )}
 
       {field.type === "time" && (
-        <input id={field.id} type="time" {...register(field.id, { required: field.required })} className={inputClass} />
+        <input id={name} type="time" {...register(name, { required: field.required })} className={inputClass} />
       )}
 
       {field.type === "select" && (
-        <select id={field.id} {...register(field.id, { required: field.required })} defaultValue="" className={inputClass}>
+        <select id={name} {...register(name, { required: field.required })} defaultValue="" className={inputClass}>
           <option value="" disabled>
             Selecciona…
           </option>
@@ -303,7 +445,7 @@ function FieldRenderer({
 
       {field.type === "boolean" && (
         <Controller
-          name={field.id}
+          name={name}
           control={control}
           rules={{ validate: (v) => (field.required ? v === true || v === false || "Requerido" : true) }}
           render={({ field: { value, onChange } }) => (
@@ -329,12 +471,12 @@ function FieldRenderer({
 
       {field.type === "master-select" && field.listKey && (
         <Controller
-          name={field.id}
+          name={name}
           control={control}
           rules={{ required: field.required }}
           render={({ field: { value, onChange } }) => (
             <MasterSelect
-              id={field.id}
+              id={name}
               plant={plant}
               listKey={field.listKey!}
               value={value ?? ""}
@@ -361,7 +503,7 @@ function FieldRenderer({
 
       {field.type === "signature" && (
         <Controller
-          name={field.id}
+          name={name}
           control={control}
           rules={{ required: field.required }}
           render={({ field: { value, onChange } }) => <SignaturePad value={value as string | null} onChange={onChange} />}
@@ -370,7 +512,7 @@ function FieldRenderer({
 
       {field.type === "photo" && (
         <Controller
-          name={field.id}
+          name={name}
           control={control}
           rules={{ validate: (v) => (field.required ? (Array.isArray(v) && v.length > 0) || "Requerido" : true) }}
           render={({ field: { value, onChange } }) => (
@@ -492,6 +634,15 @@ function PhotoField({
       )}
     </div>
   );
+}
+
+/** Si la ruta tiene error. Recorre el objeto anidado que arma react-hook-form
+ * para los arreglos: errors.clientes[0].cliente. */
+function hasErrorAt(errors: FieldErrors, path: string): boolean {
+  const nodo = path
+    .split(".")
+    .reduce<unknown>((acc, k) => (acc == null ? acc : (acc as Record<string, unknown>)[k]), errors);
+  return Boolean(nodo);
 }
 
 const inputClass =

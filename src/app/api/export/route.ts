@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { prisma } from "@/lib/prisma";
 import { isPlantSlug, getPlant } from "@/lib/plants";
-import { getReportDef, allFieldsOf } from "@/lib/reports/schemas";
+import { getReportDef, allFieldsOf, repeatableSectionsOf } from "@/lib/reports/schemas";
 import { FormValues } from "@/lib/reports/types";
 
 interface StoredPhoto {
@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
   });
 
   const fields = allFieldsOf(report);
+  const repetibles = repeatableSectionsOf(report);
   const photoFields = fields.filter((f) => f.type === "photo");
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "UltraBlue";
@@ -87,6 +88,10 @@ export async function GET(req: NextRequest) {
       key: f.id,
       width: f.type === "photo" ? PHOTO_CELL_WIDTH / 7 : 26,
     })),
+    // Una columna por sección repetible, con todas sus entradas resumidas:
+    // el número de entradas varía por reporte, así que no puede haber una
+    // columna por campo.
+    ...repetibles.map((s) => ({ header: s.title, key: s.id, width: 44 })),
   ];
   sheet.getRow(1).font = { bold: true };
   sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCEEFB" } };
@@ -100,6 +105,18 @@ export async function GET(req: NextRequest) {
     };
     for (const f of fields) {
       row[f.id] = formatCell(f.type, data[f.id]);
+    }
+    for (const sec of repetibles) {
+      const entradas = Array.isArray(data[sec.id]) ? (data[sec.id] as FormValues[]) : [];
+      row[sec.id] = entradas.length
+        ? entradas
+            .map((e) =>
+              sec.fields
+                .map((f) => `${f.label}: ${e[f.id] ?? SIN_DATO}`)
+                .join(", ")
+            )
+            .join(" | ")
+        : SIN_DATO;
     }
     const added = sheet.addRow(row);
 

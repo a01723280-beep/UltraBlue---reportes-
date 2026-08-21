@@ -31,10 +31,15 @@ export const po05: ReportDef = {
       ],
     },
     {
-      id: "cliente",
-      title: "Cliente",
+      // Un mismo envasado puede repartirse entre varios clientes, cada uno
+      // con su cantidad y su orden de venta: se captura como lista para no
+      // obligar a llenar un reporte por destino.
+      id: "clientes",
+      title: "Clientes",
+      repetible: { agregar: "Agregar cliente", singular: "Cliente", minimo: 1 },
       fields: [
         { id: "cliente", label: "Cliente", type: "master-select", listKey: LIST.clientes, required: true },
+        { id: "totesEntregados", label: "Totes entregados", type: "number", min: 0, required: true },
         { id: "ordenVenta", label: "Orden de venta", type: "master-select", listKey: LIST.ordenesVenta, required: true },
       ],
     },
