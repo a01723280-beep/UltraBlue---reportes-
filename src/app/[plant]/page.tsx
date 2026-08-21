@@ -1,6 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardList, FlaskConical, Camera, Download, Images, Route, ChevronLeft } from "lucide-react";
+import {
+  ClipboardList,
+  FlaskConical,
+  Camera,
+  Download,
+  Images,
+  Route,
+  ShieldCheck,
+  Trash2,
+  ChevronLeft,
+} from "lucide-react";
 import { getPlant } from "@/lib/plants";
 import { REPORTS } from "@/lib/reports/schemas";
 
@@ -24,42 +34,69 @@ export default async function PlantPage({ params }: { params: Promise<{ plant: s
         <p className="text-slate-500">Elige el reporte que vas a llenar.</p>
       </div>
 
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row">
-        <Link
-          href={`/${plant.slug}/descargas`}
-          className="flex flex-1 items-center justify-between rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 text-sky-800 transition hover:border-sky-300 hover:bg-sky-100"
-        >
-          <span className="flex items-center gap-2 font-medium">
-            <Download size={18} /> Descargar reportes en Excel
-          </span>
-          <ChevronLeft size={16} className="rotate-180" />
-        </Link>
-
-        <Link
-          href={`/${plant.slug}/evidencias`}
-          className="flex flex-1 items-center justify-between rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4 text-violet-800 transition hover:border-violet-300 hover:bg-violet-100"
-        >
-          <span className="flex items-center gap-2 font-medium">
-            <Images size={18} /> Ver evidencias fotográficas
-          </span>
-          <ChevronLeft size={16} className="rotate-180" />
-        </Link>
-
-        <Link
-          href={`/${plant.slug}/trazabilidad`}
-          className="flex flex-1 items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900 transition hover:border-amber-300 hover:bg-amber-100"
-        >
-          <span className="flex items-center gap-2 font-medium">
-            <Route size={18} /> Rastrear un lote
-          </span>
-          <ChevronLeft size={16} className="rotate-180" />
-        </Link>
-      </div>
+      {/* Consultar y borrar lo capturado pide una segunda contraseña, así que
+          se agrupa y se rotula para que el operador sepa que no es para él. */}
+      <section className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <ShieldCheck size={14} /> Solo administración
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <AdminLink
+            href={`/${plant.slug}/descargas`}
+            icon={<Download size={18} />}
+            label="Descargar reportes en Excel"
+          />
+          <AdminLink
+            href={`/${plant.slug}/evidencias`}
+            icon={<Images size={18} />}
+            label="Ver evidencias fotográficas"
+          />
+          <AdminLink
+            href={`/${plant.slug}/trazabilidad`}
+            icon={<Route size={18} />}
+            label="Rastrear un lote"
+          />
+          <AdminLink
+            href={`/${plant.slug}/registros`}
+            icon={<Trash2 size={18} />}
+            label="Borrar registros"
+            destructivo
+          />
+        </div>
+      </section>
 
       <ReportGroup title="Reportes de operación" icon={<ClipboardList size={18} />} reports={operacion} plant={plant.slug} />
       <ReportGroup title="Reportes de calidad" icon={<FlaskConical size={18} />} reports={calidad} plant={plant.slug} />
       <ReportGroup title="Evidencias" icon={<Camera size={18} />} reports={evidencias} plant={plant.slug} />
     </main>
+  );
+}
+
+function AdminLink({
+  href,
+  icon,
+  label,
+  destructivo,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  destructivo?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center justify-between rounded-xl border bg-white px-4 py-3 text-sm font-medium transition ${
+        destructivo
+          ? "border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
+          : "border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+      }`}
+    >
+      <span className="flex items-center gap-2">
+        {icon} {label}
+      </span>
+      <ChevronLeft size={16} className="rotate-180 opacity-50" />
+    </Link>
   );
 }
 
