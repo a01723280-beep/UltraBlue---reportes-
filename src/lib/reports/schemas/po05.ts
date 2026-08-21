@@ -1,97 +1,205 @@
 import { ReportDef } from "../types";
-import { LIST, TANQUES_ALMACENAMIENTO } from "../options";
+import { LIST, TANQUES_MEZCLADO, TANQUES_AGUA_DESIONIZADA } from "../options";
+import { numOrNull } from "../util";
+
+const CONC_MIN = 31.8;
+const CONC_MAX = 33.2;
+const TEMP_AGUA_MIN = 38;
 
 export const po05: ReportDef = {
   code: "PO-05",
-  title: "Reporte de envasado de tote (IBC)",
+  title: "Reporte de proceso de mezclado de urea",
   category: "operacion",
   sections: [
     {
       id: "general",
       title: "Información general",
       fields: [
+        {
+          // El mezclado es donde la urea recibida se convierte en DEF, así
+          // que es el único punto que puede emitir el lote de producción y
+          // enlazar la recepción con el envasado. El servidor lo asigna al
+          // guardar para que no se repita entre operadores.
+          id: "loteProduccion",
+          label: "Lote de producción generado",
+          type: "calculated",
+          help: "Se asigna automáticamente al guardar y queda disponible para los reportes de envasado.",
+          calculate: () => null,
+        },
         { id: "fecha", label: "Fecha", type: "date", required: true },
-        { id: "hora", label: "Hora", type: "time", required: true },
-        { id: "operador", label: "Operador responsable", type: "master-select", listKey: LIST.operadores, required: true },
-        { id: "loteDef", label: "Lote de DEF", type: "master-select", listKey: LIST.lotesProduccion, required: true },
-        { id: "tanqueAlmacenamiento", label: "Tanque de almacenamiento", type: "select", options: TANQUES_ALMACENAMIENTO, required: true },
-      ],
-    },
-    {
-      id: "sellado",
-      title: "Sellado",
-      fields: [
-        { id: "numeroSello1", label: "Número de sello 1", type: "text" },
-        { id: "numeroSello2", label: "Número de sello 2", type: "text" },
-        { id: "numeroSello3", label: "Número de sello 3", type: "text" },
-        { id: "numeroSello4", label: "Número de sello 4", type: "text" },
-        { id: "numeroSello5", label: "Número de sello 5", type: "text" },
-        { id: "numeroSello6", label: "Número de sello 6", type: "text" },
-        { id: "selloColocadoBien", label: "¿Los sellos quedaron correctamente colocados?", type: "boolean", required: true },
-      ],
-    },
-    {
-      // Un mismo envasado puede repartirse entre varios clientes, cada uno
-      // con su cantidad y su orden de venta: se captura como lista para no
-      // obligar a llenar un reporte por destino.
-      id: "clientes",
-      title: "Clientes",
-      repetible: { agregar: "Agregar cliente", singular: "Cliente", minimo: 1 },
-      fields: [
-        { id: "cliente", label: "Cliente", type: "master-select", listKey: LIST.clientes, required: true },
-        { id: "totesEntregados", label: "Totes entregados", type: "number", min: 0, required: true },
-        { id: "ordenVenta", label: "Orden de venta", type: "master-select", listKey: LIST.ordenesVenta, required: true },
-      ],
-    },
-    {
-      id: "llenado",
-      title: "Llenado",
-      fields: [
+        { id: "horaInicio", label: "Hora de inicio", type: "time", required: true },
+        { id: "horaFin", label: "Hora de finalización", type: "time", required: true },
         {
-          // El mismo tote sirve para DEF o para agua, y viene en dos
-          // capacidades: ambas cosas cambian qué se despachó, así que se
-          // registran en vez de asumirse.
-          id: "contenido",
-          label: "Contenido",
-          type: "select",
-          options: [
-            { value: "DEF (urea)", label: "DEF (urea)" },
-            { value: "Agua", label: "Agua" },
-          ],
+          id: "operador",
+          label: "Operador responsable",
+          type: "master-select",
+          listKey: LIST.operadores,
           required: true,
         },
         {
-          id: "volumenPorTote",
-          label: "Volumen por tote",
+          id: "tanque",
+          label: "Tanque utilizado",
           type: "select",
-          options: [
-            { value: "1000", label: "1000 L" },
-            { value: "1200", label: "1200 L" },
-          ],
+          options: TANQUES_MEZCLADO,
           required: true,
         },
-        { id: "numeroTotesLlenados", label: "Número de totes llenados", type: "number", min: 0, required: true },
-        { id: "todosLlenadosBien", label: "¿Todos los totes fueron llenados correctamente?", type: "boolean", required: true },
+      ],
+    },
+    {
+      id: "materia-prima",
+      title: "Materia prima",
+      fields: [
+        {
+          id: "loteUrea",
+          label: "¿Qué lote de urea se utilizó?",
+          type: "master-select",
+          listKey: LIST.lotesUreaMateriaPrima,
+          required: true,
+        },
+        { id: "bolsasUtilizadas", label: "¿Cuántas bolsas se utilizaron?", type: "number", min: 0, required: true },
+      ],
+    },
+    {
+      id: "agua",
+      title: "Agua",
+      fields: [
+        {
+          // Al mixer entra agua ya desionizada, no cruda: registrar el TAC
+          // aquí apuntaba a un tanque por el que el agua ya había pasado.
+          id: "tanqueAgua",
+          label: "¿Qué tanque de agua desionizada se utilizó?",
+          type: "select",
+          options: TANQUES_AGUA_DESIONIZADA,
+          required: true,
+        },
+        { id: "m3Agua", label: "¿Cuántos m³ de agua se utilizaron?", type: "number", min: 0, unit: "m³", required: true },
+        {
+          id: "temperaturaAgua",
+          label: "Temperatura promedio del agua",
+          type: "number",
+          unit: "°C",
+          min: TEMP_AGUA_MIN,
+          required: true,
+          alertIf: (v) => {
+            const t = numOrNull(v.temperaturaAgua);
+            if (t === null) return null;
+            return t < TEMP_AGUA_MIN
+              ? `⚠️ El agua no está dentro del rango de temperatura (mínimo ${TEMP_AGUA_MIN} °C).`
+              : null;
+          },
+        },
+      ],
+    },
+    {
+      id: "produccion",
+      title: "Producción",
+      fields: [
+        { id: "inicioCorrecto", label: "¿Se inició correctamente el mezclado?", type: "boolean", required: true },
+        {
+          id: "motivoNoInicio",
+          label: "Motivo",
+          type: "select",
+          options: [
+            "Falla de bomba",
+            "Falla de mixer",
+            "Falta de agua",
+            "Falta de urea",
+            "Falla eléctrica",
+            "Otro",
+          ].map((v) => ({ value: v, label: v })),
+          showIf: (v) => v.inicioCorrecto === false,
+          required: true,
+        },
+        {
+          id: "motivoNoInicioOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.motivoNoInicio === "Otro",
+          required: true,
+        },
+        { id: "tiempoMezclado", label: "Tiempo de mezclado", type: "number", unit: "min", min: 0 },
+      ],
+    },
+    {
+      id: "calidad",
+      title: "Calidad",
+      fields: [
+        { id: "concentracionObtenida", label: "Concentración obtenida", type: "number", unit: "%", required: true },
+        {
+          id: "concentracionCumple",
+          label: `¿La concentración cumple especificación (${CONC_MIN}–${CONC_MAX} %)?`,
+          type: "calculated",
+          calculate: (v) => {
+            const c = numOrNull(v.concentracionObtenida);
+            if (c === null) return null;
+            return c >= CONC_MIN && c <= CONC_MAX ? "Sí" : "No";
+          },
+          alertIf: (v) => {
+            const c = numOrNull(v.concentracionObtenida);
+            if (c === null) return null;
+            return c >= CONC_MIN && c <= CONC_MAX ? null : "⚠️ Concentración fuera de especificación.";
+          },
+        },
+        {
+          id: "ajusteRealizado",
+          label: "¿Qué ajuste se realizó?",
+          type: "select",
+          options: ["Agregar agua", "Agregar urea", "Recircular", "Otro"].map((v) => ({ value: v, label: v })),
+          showIf: (v) => {
+            const c = numOrNull(v.concentracionObtenida);
+            return c !== null && !(c >= CONC_MIN && c <= CONC_MAX);
+          },
+        },
+        {
+          id: "ajusteRealizadoOtro",
+          label: "¿Cuál?",
+          type: "text",
+          showIf: (v) => v.ajusteRealizado === "Otro",
+          required: true,
+        },
+        {
+          id: "concentracionFinal",
+          label: "Concentración final",
+          type: "number",
+          unit: "%",
+          showIf: (v) => {
+            const c = numOrNull(v.concentracionObtenida);
+            return c !== null && !(c >= CONC_MIN && c <= CONC_MAX);
+          },
+        },
+        { id: "porcentajeUreaTanque", label: "% de urea en el tanque", type: "number", unit: "%", required: true },
       ],
     },
     {
       id: "muestreo",
       title: "Muestreo",
       fields: [
-        { id: "seTomoMuestra", label: "¿Se tomó muestra?", type: "boolean", required: true },
-        { id: "numeroMuestra", label: "Número de muestra", type: "auto-number", showIf: (v) => v.seTomoMuestra === true },
+        { id: "seTomoMuestra", label: "¿Se tomó muestra del lote?", type: "boolean", required: true },
+        {
+          id: "numeroMuestra",
+          label: "Número de muestra",
+          type: "auto-number",
+          showIf: (v) => v.seTomoMuestra === true,
+        },
       ],
     },
     {
       id: "observaciones",
       title: "Observaciones",
       fields: [
-        { id: "anomalia", label: "¿Se presentó alguna anomalía durante el llenado?", type: "boolean", required: true },
+        { id: "anomalia", label: "¿Se presentó alguna anomalía durante la producción?", type: "boolean", required: true },
         {
           id: "tipoAnomalia",
           label: "Tipo de anomalía",
           type: "select",
-          options: ["Derrame", "Problema en bomba", "Problema en válvula", "IBC dañado", "Fuga", "Otro"].map((v) => ({ value: v, label: v })),
+          options: [
+            "Problema con el mixer",
+            "Problema con bomba",
+            "Problema con válvulas",
+            "Problema con agua",
+            "Problema con urea",
+            "Otro",
+          ].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.anomalia === true,
           required: true,
         },
@@ -102,7 +210,6 @@ export const po05: ReportDef = {
           showIf: (v) => v.tipoAnomalia === "Otro",
           required: true,
         },
-        { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "comentarios", label: "Comentarios", type: "textarea" },
       ],
     },

@@ -9,6 +9,8 @@ import { po07 } from "./po07";
 import { po08 } from "./po08";
 import { po09 } from "./po09";
 import { po10 } from "./po10";
+import { po11 } from "./po11";
+import { po12 } from "./po12";
 import { pc01 } from "./pc01";
 import { pc02 } from "./pc02";
 import { pc03 } from "./pc03";
@@ -27,6 +29,8 @@ export const REPORTS: ReportDef[] = [
   po08,
   po09,
   po10,
+  po11,
+  po12,
   pc01,
   pc02,
   pc03,

@@ -10,11 +10,11 @@ import { FormValues } from "@/lib/reports/types";
  * que aparece en ambos mapas: por eso es la bisagra de la cadena.
  */
 const CAMPO_LOTE_PRODUCCION: Record<string, string> = {
-  "PO-03": "loteProduccion",
-  "PO-04": "loteDef",
-  "PO-05": "loteDef",
+  "PO-05": "loteProduccion",
   "PO-06": "loteDef",
   "PO-07": "loteDef",
+  "PO-08": "loteDef",
+  "PO-09": "loteDef",
   "PC-02": "numeroLoteProduccion",
   "PC-03": "numeroLote",
   "PC-04": "numeroLote",
@@ -23,7 +23,7 @@ const CAMPO_LOTE_PRODUCCION: Record<string, string> = {
 const CAMPO_LOTE_UREA: Record<string, string> = {
   "PO-01": "numeroLoteProveedor",
   "PC-01": "numeroLote",
-  "PO-03": "loteUrea",
+  "PO-05": "loteUrea",
 };
 
 export interface EslabonTraza {
@@ -124,13 +124,13 @@ export async function GET(req: NextRequest) {
 
   // El mezclado que emitió este lote es el que dice qué urea se consumió.
   const mezclado = todos.find(
-    (s) => s.reportType === "PO-03" && valorDe(s, CAMPO_LOTE_PRODUCCION) === lote
+    (s) => s.reportType === "PO-05" && valorDe(s, CAMPO_LOTE_PRODUCCION) === lote
   );
   const loteUrea = mezclado ? valorDe(mezclado, CAMPO_LOTE_UREA) : null;
 
   const porLoteProduccion = todos.filter((s) => valorDe(s, CAMPO_LOTE_PRODUCCION) === lote);
   const porLoteUrea = loteUrea
-    ? todos.filter((s) => s.reportType !== "PO-03" && valorDe(s, CAMPO_LOTE_UREA) === loteUrea)
+    ? todos.filter((s) => s.reportType !== "PO-05" && valorDe(s, CAMPO_LOTE_UREA) === loteUrea)
     : [];
 
   const limpiar = (arr: typeof todos) =>
@@ -140,10 +140,10 @@ export async function GET(req: NextRequest) {
     lote,
     loteUrea,
     origen: limpiar(porLoteUrea),
-    produccion: limpiar(porLoteProduccion.filter((s) => s.reportType === "PO-03")),
+    produccion: limpiar(porLoteProduccion.filter((s) => s.reportType === "PO-05")),
     calidad: limpiar(porLoteProduccion.filter((s) => s.reportType.startsWith("PC-"))),
     envasado: limpiar(
-      porLoteProduccion.filter((s) => ["PO-04", "PO-05", "PO-06", "PO-07"].includes(s.reportType))
+      porLoteProduccion.filter((s) => ["PO-06", "PO-07", "PO-08", "PO-09"].includes(s.reportType))
     ),
   };
 

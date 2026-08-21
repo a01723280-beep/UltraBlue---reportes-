@@ -4,7 +4,7 @@ import { LIST } from "@/lib/reports/options";
 import { PlantSlug } from "@/lib/plants";
 
 /** El mezclado es el reporte que emite el lote de producción. */
-export const MEZCLADO_REPORT = "PO-03";
+export const MEZCLADO_REPORT = "PO-05";
 export const LOTE_PRODUCCION_FIELD = "loteProduccion";
 
 /** Código corto por planta, para que el lote se lea de un vistazo en la

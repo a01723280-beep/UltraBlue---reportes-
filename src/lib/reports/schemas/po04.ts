@@ -1,9 +1,10 @@
 import { ReportDef } from "../types";
-import { LIST, TANQUES_ALMACENAMIENTO } from "../options";
+import { LIST, ESTADO_4 } from "../options";
+import { numOrNull } from "../util";
 
 export const po04: ReportDef = {
   code: "PO-04",
-  title: "Reporte de proceso de llenado de pipa",
+  title: "Reporte de recepción de porrones",
   category: "operacion",
   sections: [
     {
@@ -12,109 +13,107 @@ export const po04: ReportDef = {
       fields: [
         { id: "fecha", label: "Fecha", type: "date", required: true },
         { id: "hora", label: "Hora", type: "time", required: true },
-        { id: "operadorCarga", label: "Operador de carga", type: "master-select", listKey: LIST.operadores, required: true },
-        { id: "loteDef", label: "Lote de DEF", type: "master-select", listKey: LIST.lotesProduccion, required: true },
-        { id: "tanqueAlmacenamiento", label: "Tanque de almacenamiento", type: "select", options: TANQUES_ALMACENAMIENTO, required: true },
+        { id: "operador", label: "Operador responsable", type: "master-select", listKey: LIST.operadores, required: true },
+        { id: "proveedor", label: "Proveedor", type: "master-select", listKey: LIST.proveedoresEnvases, required: true },
+        { id: "matricula", label: "Matrícula de la unidad", type: "text", help: "Serie alfanumérica, como aparece en la placa.", required: true },
+        { id: "fletero", label: "Fletero", type: "master-select", listKey: LIST.fleteros, required: true },
+        { id: "nombreChofer", label: "Nombre de chofer", type: "master-select", listKey: LIST.choferes, required: true },
       ],
     },
     {
-      id: "inspeccion-previa",
-      title: "Inspección previa",
+      id: "documentacion",
+      title: "Documentación",
       fields: [
-        { id: "certificadoVigente", label: "¿El certificado del tanque está vigente?", type: "boolean", required: true },
-        { id: "estadoTanquePipa", label: "Estado del tanque de la pipa", type: "select", options: [
-          { value: "Excelente", label: "Excelente" },
-          { value: "Bueno", label: "Bueno" },
-          { value: "Regular", label: "Regular" },
-          { value: "Malo", label: "Malo" },
-        ], required: true },
-        { id: "estadoManguera", label: "Estado de la manguera", type: "select", options: [
-          { value: "Excelente", label: "Excelente" },
-          { value: "Bueno", label: "Bueno" },
-          { value: "Regular", label: "Regular" },
-          { value: "Malo", label: "Malo" },
-        ], required: true },
-        { id: "unidadLimpia", label: "¿La unidad está limpia?", type: "boolean", required: true },
-        { id: "contaminacion", label: "¿Se detectó contaminación o residuos?", type: "boolean", required: true },
+        { id: "ordenCompra", label: "Orden de compra", type: "master-select", listKey: LIST.ordenesCompra, required: true },
+        { id: "documentacionCompleta", label: "¿La documentación está completa?", type: "boolean", required: true },
         {
-          id: "queSeEncontro",
-          label: "¿Qué se encontró?",
+          id: "documentacionFaltante",
+          label: "¿Qué documentación falta?",
+          type: "textarea",
+          showIf: (v) => v.documentacionCompleta === false,
+          required: true,
+        },
+      ],
+    },
+    {
+      id: "cantidades",
+      title: "Cantidades",
+      fields: [
+        { id: "porronesOrdenados", label: "Número de porróns ordenados", type: "number", min: 0, required: true },
+        { id: "porronesRecibidos", label: "Número de porróns recibidos", type: "number", min: 0, required: true },
+        {
+          id: "diferencia",
+          label: "Diferencia",
+          type: "calculated",
+          calculate: (v) => {
+            const ord = numOrNull(v.porronesOrdenados);
+            const rec = numOrNull(v.porronesRecibidos);
+            if (ord === null || rec === null) return null;
+            return Math.abs(rec - ord);
+          },
+          alertTone: "info",
+          alertIf: (v) => {
+            const ord = numOrNull(v.porronesOrdenados);
+            const rec = numOrNull(v.porronesRecibidos);
+            if (ord === null || rec === null) return null;
+            const diff = rec - ord;
+            if (diff === 0) return null;
+            const n = Math.abs(diff);
+            const uno = n === 1;
+            return diff > 0
+              ? `Se está${uno ? "" : "n"} recibiendo ${n} porrón${uno ? "" : "s"} más de los ordenados.`
+              : `Falta${uno ? "" : "n"} ${n} porrón${uno ? "" : "s"} respecto a lo ordenado.`;
+          },
+        },
+      ],
+    },
+    {
+      id: "inspeccion-envase",
+      title: "Inspección del porrón",
+      fields: [
+        { id: "limpioExterno", label: "¿El porrón está limpio externamente?", type: "boolean", required: true },
+        { id: "limpioInterno", label: "¿El porrón está limpio internamente?", type: "boolean", required: true },
+        { id: "estadoGeneral", label: "Estado general del porrón", type: "select", options: ESTADO_4, required: true },
+        { id: "presentaDanos", label: "¿Presenta daños?", type: "boolean", required: true },
+        {
+          id: "tipoDano",
+          label: "Tipo de daño",
           type: "select",
-          options: ["Agua", "Aceite", "Polvo", "Producto anterior", "Otro"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.contaminacion === true,
+          options: ["Grieta", "Golpe", "Deformación", "Rosca dañada", "Otro"].map((v) => ({ value: v, label: v })),
+          showIf: (v) => v.presentaDanos === true,
           required: true,
         },
         {
-          id: "queSeEncontroOtro",
+          id: "tipoDanoOtro",
           label: "¿Cuál?",
           type: "text",
-          showIf: (v) => v.queSeEncontro === "Otro",
+          showIf: (v) => v.tipoDano === "Otro",
+          required: true,
+        },
+        { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
+      ],
+    },
+    {
+      id: "aceptacion",
+      title: "Aceptación",
+      fields: [
+        { id: "porronesRechazados", label: "Número de porróns rechazados", type: "number", min: 0, required: true },
+        {
+          id: "motivoRechazo",
+          label: "Motivo del rechazo",
+          type: "textarea",
+          showIf: (v) => {
+            const n = numOrNull(v.porronesRechazados);
+            return n !== null && n > 0;
+          },
           required: true,
         },
       ],
     },
     {
-      id: "transporte",
-      title: "Información del transporte",
+      id: "evidencia",
+      title: "Evidencia y comentarios",
       fields: [
-        { id: "numeroEconomico", label: "Número de unidad", type: "text", required: true },
-        { id: "placas", label: "Placas", type: "text", required: true },
-        { id: "transportista", label: "Transportista", type: "master-select", listKey: LIST.transportistas, required: true },
-        { id: "operadorTransporte", label: "Operador del transporte", type: "master-select", listKey: LIST.operadoresTransporte, required: true },
-      ],
-    },
-    {
-      id: "carga",
-      title: "Carga",
-      fields: [
-        { id: "inicioCorrecto", label: "¿Se inició correctamente la carga?", type: "boolean", required: true },
-        {
-          id: "motivoNoInicio",
-          label: "Motivo",
-          type: "select",
-          options: ["Falla de bomba", "Falla de manguera", "Falla de válvula", "Otro"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.inicioCorrecto === false,
-          required: true,
-        },
-        {
-          id: "motivoNoInicioOtro",
-          label: "¿Cuál?",
-          type: "text",
-          showIf: (v) => v.motivoNoInicio === "Otro",
-          required: true,
-        },
-        { id: "litrosCargados", label: "Litros cargados", type: "number", unit: "L", min: 0, required: true },
-        { id: "coincideOrden", label: "¿La cantidad cargada coincide con la orden?", type: "boolean", required: true },
-      ],
-    },
-    {
-      id: "muestreo",
-      title: "Muestreo",
-      fields: [
-        { id: "seTomoMuestra", label: "¿Se tomó muestra?", type: "boolean", required: true },
-        { id: "numeroMuestra", label: "Número de muestra", type: "auto-number", showIf: (v) => v.seTomoMuestra === true },
-      ],
-    },
-    {
-      id: "observaciones",
-      title: "Observaciones",
-      fields: [
-        { id: "anomalia", label: "¿Se presentó alguna anomalía durante la carga?", type: "boolean", required: true },
-        {
-          id: "tipoAnomalia",
-          label: "Tipo de anomalía",
-          type: "select",
-          options: ["Fuga", "Problema en bomba", "Problema en manguera", "Problema en válvula", "Problema en la pipa", "Otro"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.anomalia === true,
-          required: true,
-        },
-        {
-          id: "tipoAnomaliaOtro",
-          label: "¿Cuál?",
-          type: "text",
-          showIf: (v) => v.tipoAnomalia === "Otro",
-          required: true,
-        },
         { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "comentarios", label: "Comentarios", type: "textarea" },
       ],

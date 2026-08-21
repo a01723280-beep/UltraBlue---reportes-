@@ -1,215 +1,120 @@
 import { ReportDef } from "../types";
-import { LIST, TANQUES_MEZCLADO, TANQUES_AGUA_DESIONIZADA } from "../options";
+import { LIST, ESTADO_4 } from "../options";
 import { numOrNull } from "../util";
-
-const CONC_MIN = 31.8;
-const CONC_MAX = 33.2;
-const TEMP_AGUA_MIN = 38;
 
 export const po03: ReportDef = {
   code: "PO-03",
-  title: "Reporte de proceso de mezclado de urea",
+  title: "Reporte de recepción de tambos",
   category: "operacion",
   sections: [
     {
       id: "general",
       title: "Información general",
       fields: [
-        {
-          // El mezclado es donde la urea recibida se convierte en DEF, así
-          // que es el único punto que puede emitir el lote de producción y
-          // enlazar la recepción con el envasado. El servidor lo asigna al
-          // guardar para que no se repita entre operadores.
-          id: "loteProduccion",
-          label: "Lote de producción generado",
-          type: "calculated",
-          help: "Se asigna automáticamente al guardar y queda disponible para los reportes de envasado.",
-          calculate: () => null,
-        },
         { id: "fecha", label: "Fecha", type: "date", required: true },
-        { id: "horaInicio", label: "Hora de inicio", type: "time", required: true },
-        { id: "horaFin", label: "Hora de finalización", type: "time", required: true },
+        { id: "hora", label: "Hora", type: "time", required: true },
+        { id: "operador", label: "Operador responsable", type: "master-select", listKey: LIST.operadores, required: true },
+        { id: "proveedor", label: "Proveedor", type: "master-select", listKey: LIST.proveedoresEnvases, required: true },
+        { id: "matricula", label: "Matrícula de la unidad", type: "text", help: "Serie alfanumérica, como aparece en la placa.", required: true },
+        { id: "fletero", label: "Fletero", type: "master-select", listKey: LIST.fleteros, required: true },
+        { id: "nombreChofer", label: "Nombre de chofer", type: "master-select", listKey: LIST.choferes, required: true },
+      ],
+    },
+    {
+      id: "documentacion",
+      title: "Documentación",
+      fields: [
+        { id: "ordenCompra", label: "Orden de compra", type: "master-select", listKey: LIST.ordenesCompra, required: true },
+        { id: "documentacionCompleta", label: "¿La documentación está completa?", type: "boolean", required: true },
         {
-          id: "operador",
-          label: "Operador responsable",
-          type: "master-select",
-          listKey: LIST.operadores,
-          required: true,
-        },
-        {
-          id: "tanque",
-          label: "Tanque utilizado",
-          type: "select",
-          options: TANQUES_MEZCLADO,
+          id: "documentacionFaltante",
+          label: "¿Qué documentación falta?",
+          type: "textarea",
+          showIf: (v) => v.documentacionCompleta === false,
           required: true,
         },
       ],
     },
     {
-      id: "materia-prima",
-      title: "Materia prima",
+      id: "cantidades",
+      title: "Cantidades",
       fields: [
+        { id: "tambosOrdenados", label: "Número de tambos ordenados", type: "number", min: 0, required: true },
+        { id: "tambosRecibidos", label: "Número de tambos recibidos", type: "number", min: 0, required: true },
         {
-          id: "loteUrea",
-          label: "¿Qué lote de urea se utilizó?",
-          type: "master-select",
-          listKey: LIST.lotesUreaMateriaPrima,
-          required: true,
-        },
-        { id: "bolsasUtilizadas", label: "¿Cuántas bolsas se utilizaron?", type: "number", min: 0, required: true },
-      ],
-    },
-    {
-      id: "agua",
-      title: "Agua",
-      fields: [
-        {
-          // Al mixer entra agua ya desionizada, no cruda: registrar el TAC
-          // aquí apuntaba a un tanque por el que el agua ya había pasado.
-          id: "tanqueAgua",
-          label: "¿Qué tanque de agua desionizada se utilizó?",
-          type: "select",
-          options: TANQUES_AGUA_DESIONIZADA,
-          required: true,
-        },
-        { id: "m3Agua", label: "¿Cuántos m³ de agua se utilizaron?", type: "number", min: 0, unit: "m³", required: true },
-        {
-          id: "temperaturaAgua",
-          label: "Temperatura promedio del agua",
-          type: "number",
-          unit: "°C",
-          min: TEMP_AGUA_MIN,
-          required: true,
-          alertIf: (v) => {
-            const t = numOrNull(v.temperaturaAgua);
-            if (t === null) return null;
-            return t < TEMP_AGUA_MIN
-              ? `⚠️ El agua no está dentro del rango de temperatura (mínimo ${TEMP_AGUA_MIN} °C).`
-              : null;
-          },
-        },
-      ],
-    },
-    {
-      id: "produccion",
-      title: "Producción",
-      fields: [
-        { id: "inicioCorrecto", label: "¿Se inició correctamente el mezclado?", type: "boolean", required: true },
-        {
-          id: "motivoNoInicio",
-          label: "Motivo",
-          type: "select",
-          options: [
-            "Falla de bomba",
-            "Falla de mixer",
-            "Falta de agua",
-            "Falta de urea",
-            "Falla eléctrica",
-            "Otro",
-          ].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.inicioCorrecto === false,
-          required: true,
-        },
-        {
-          id: "motivoNoInicioOtro",
-          label: "¿Cuál?",
-          type: "text",
-          showIf: (v) => v.motivoNoInicio === "Otro",
-          required: true,
-        },
-        { id: "tiempoMezclado", label: "Tiempo de mezclado", type: "number", unit: "min", min: 0 },
-      ],
-    },
-    {
-      id: "calidad",
-      title: "Calidad",
-      fields: [
-        { id: "concentracionObtenida", label: "Concentración obtenida", type: "number", unit: "%", required: true },
-        {
-          id: "concentracionCumple",
-          label: `¿La concentración cumple especificación (${CONC_MIN}–${CONC_MAX} %)?`,
+          id: "diferencia",
+          label: "Diferencia",
           type: "calculated",
           calculate: (v) => {
-            const c = numOrNull(v.concentracionObtenida);
-            if (c === null) return null;
-            return c >= CONC_MIN && c <= CONC_MAX ? "Sí" : "No";
+            const ord = numOrNull(v.tambosOrdenados);
+            const rec = numOrNull(v.tambosRecibidos);
+            if (ord === null || rec === null) return null;
+            return Math.abs(rec - ord);
           },
+          alertTone: "info",
           alertIf: (v) => {
-            const c = numOrNull(v.concentracionObtenida);
-            if (c === null) return null;
-            return c >= CONC_MIN && c <= CONC_MAX ? null : "⚠️ Concentración fuera de especificación.";
+            const ord = numOrNull(v.tambosOrdenados);
+            const rec = numOrNull(v.tambosRecibidos);
+            if (ord === null || rec === null) return null;
+            const diff = rec - ord;
+            if (diff === 0) return null;
+            const n = Math.abs(diff);
+            const uno = n === 1;
+            return diff > 0
+              ? `Se está${uno ? "" : "n"} recibiendo ${n} tambo${uno ? "" : "s"} más de los ordenados.`
+              : `Falta${uno ? "" : "n"} ${n} tambo${uno ? "" : "s"} respecto a lo ordenado.`;
           },
-        },
-        {
-          id: "ajusteRealizado",
-          label: "¿Qué ajuste se realizó?",
-          type: "select",
-          options: ["Agregar agua", "Agregar urea", "Recircular", "Otro"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => {
-            const c = numOrNull(v.concentracionObtenida);
-            return c !== null && !(c >= CONC_MIN && c <= CONC_MAX);
-          },
-        },
-        {
-          id: "ajusteRealizadoOtro",
-          label: "¿Cuál?",
-          type: "text",
-          showIf: (v) => v.ajusteRealizado === "Otro",
-          required: true,
-        },
-        {
-          id: "concentracionFinal",
-          label: "Concentración final",
-          type: "number",
-          unit: "%",
-          showIf: (v) => {
-            const c = numOrNull(v.concentracionObtenida);
-            return c !== null && !(c >= CONC_MIN && c <= CONC_MAX);
-          },
-        },
-        { id: "porcentajeUreaTanque", label: "% de urea en el tanque", type: "number", unit: "%", required: true },
-      ],
-    },
-    {
-      id: "muestreo",
-      title: "Muestreo",
-      fields: [
-        { id: "seTomoMuestra", label: "¿Se tomó muestra del lote?", type: "boolean", required: true },
-        {
-          id: "numeroMuestra",
-          label: "Número de muestra",
-          type: "auto-number",
-          showIf: (v) => v.seTomoMuestra === true,
         },
       ],
     },
     {
-      id: "observaciones",
-      title: "Observaciones",
+      id: "inspeccion-envase",
+      title: "Inspección del tambo",
       fields: [
-        { id: "anomalia", label: "¿Se presentó alguna anomalía durante la producción?", type: "boolean", required: true },
+        { id: "limpioExterno", label: "¿El tambo está limpio externamente?", type: "boolean", required: true },
+        { id: "limpioInterno", label: "¿El tambo está limpio internamente?", type: "boolean", required: true },
+        { id: "estadoGeneral", label: "Estado general del tambo", type: "select", options: ESTADO_4, required: true },
+        { id: "presentaDanos", label: "¿Presenta daños?", type: "boolean", required: true },
         {
-          id: "tipoAnomalia",
-          label: "Tipo de anomalía",
+          id: "tipoDano",
+          label: "Tipo de daño",
           type: "select",
-          options: [
-            "Problema con el mixer",
-            "Problema con bomba",
-            "Problema con válvulas",
-            "Problema con agua",
-            "Problema con urea",
-            "Otro",
-          ].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.anomalia === true,
+          options: ["Golpe", "Abolladura", "Óxido", "Fuga", "Otro"].map((v) => ({ value: v, label: v })),
+          showIf: (v) => v.presentaDanos === true,
           required: true,
         },
         {
-          id: "tipoAnomaliaOtro",
+          id: "tipoDanoOtro",
           label: "¿Cuál?",
           type: "text",
-          showIf: (v) => v.tipoAnomalia === "Otro",
+          showIf: (v) => v.tipoDano === "Otro",
           required: true,
         },
+        { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
+      ],
+    },
+    {
+      id: "aceptacion",
+      title: "Aceptación",
+      fields: [
+        { id: "tambosRechazados", label: "Número de tambos rechazados", type: "number", min: 0, required: true },
+        {
+          id: "motivoRechazo",
+          label: "Motivo del rechazo",
+          type: "textarea",
+          showIf: (v) => {
+            const n = numOrNull(v.tambosRechazados);
+            return n !== null && n > 0;
+          },
+          required: true,
+        },
+      ],
+    },
+    {
+      id: "evidencia",
+      title: "Evidencia y comentarios",
+      fields: [
+        { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "comentarios", label: "Comentarios", type: "textarea" },
       ],
     },

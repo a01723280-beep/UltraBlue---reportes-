@@ -1,9 +1,11 @@
 import { ReportDef } from "../types";
-import { LIST, ESTADO_4 } from "../options";
+import { LIST, ESTADO_4, TANQUES_ALMACENAMIENTO } from "../options";
+
+const VOLUMEN_TAMBO_HABITUAL = 200;
 
 export const po08: ReportDef = {
   code: "PO-08",
-  title: "Reporte de limpieza de mixer",
+  title: "Reporte de envasado de tambo",
   category: "operacion",
   sections: [
     {
@@ -13,62 +15,82 @@ export const po08: ReportDef = {
         { id: "fecha", label: "Fecha", type: "date", required: true },
         { id: "hora", label: "Hora", type: "time", required: true },
         { id: "operador", label: "Operador responsable", type: "master-select", listKey: LIST.operadores, required: true },
+        { id: "loteDef", label: "Lote de DEF", type: "master-select", listKey: LIST.lotesProduccion, required: true },
+        { id: "tanqueAlmacenamiento", label: "Tanque de almacenamiento", type: "select", options: TANQUES_ALMACENAMIENTO, required: true },
       ],
     },
     {
-      id: "actividades-diarias",
-      title: "Actividades diarias",
+      id: "inspeccion-tambo",
+      title: "Inspección del tambo",
       fields: [
-        { id: "filtroYLimpio", label: '¿Se limpió el filtro "Y"?', type: "boolean", required: true },
-        { id: "mezcladorLibreResiduos", label: "¿El mezclador quedó libre de residuos?", type: "boolean", required: true },
-        { id: "fugasDetectadas", label: "¿Se detectaron fugas en el sistema?", type: "boolean", required: true },
+        { id: "limpioExterno", label: "¿El tambo está limpio externamente?", type: "boolean", required: true },
+        { id: "limpioInterno", label: "¿El tambo está limpio internamente?", type: "boolean", required: true },
+        { id: "estadoGeneral", label: "Estado general del tambo", type: "select", options: ESTADO_4, required: true },
+        { id: "presentaDanos", label: "¿El tambo presenta daños?", type: "boolean", required: true },
         {
-          id: "dondeFuga",
-          label: "¿Dónde se encontró la fuga?",
+          id: "tipoDano",
+          label: "Tipo de daño",
           type: "select",
-          options: ["Mixer", "Bomba", "Tubería", "Válvula", "Otro"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.fugasDetectadas === true,
+          options: ["Golpe", "Abolladura", "Óxido", "Fuga", "Otro"].map((v) => ({ value: v, label: v })),
+          showIf: (v) => v.presentaDanos === true,
           required: true,
         },
         {
-          id: "dondeFugaOtro",
+          id: "tipoDanoOtro",
           label: "¿Cuál?",
           type: "text",
-          showIf: (v) => v.dondeFuga === "Otro",
+          showIf: (v) => v.tipoDano === "Otro",
           required: true,
         },
-        { id: "fibrasEliminadas", label: "¿Se eliminaron fibras del tanque de urea?", type: "boolean", required: true },
-        { id: "limpiezaTolvaMixer", label: "¿Se realizó la limpieza de la tolva y del mixer?", type: "boolean", required: true },
+        { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
       ],
     },
     {
-      id: "actividades-semanales",
-      title: "Actividades semanales",
+      id: "llenado",
+      title: "Llenado",
       fields: [
-        { id: "limpiezaGeneralMaquina", label: "¿Se realizó la limpieza general de la máquina?", type: "boolean", required: true },
-        { id: "serpentinLimpio", label: "¿Se limpió el serpentín interior?", type: "boolean", required: true },
+        {
+          // 200 L es lo habitual, pero no siempre: se precarga y el operador
+          // lo corrige cuando el tambo va a otra capacidad.
+          id: "volumenPorTambo",
+          label: "Volumen por tambo",
+          type: "number",
+          unit: "L",
+          min: 0,
+          defaultValue: VOLUMEN_TAMBO_HABITUAL,
+          required: true,
+        },
+        { id: "numeroTambosLlenados", label: "Número de tambos llenados", type: "number", min: 0, required: true },
+        { id: "todosLlenadosBien", label: "¿Todos los tambos fueron llenados correctamente?", type: "boolean", required: true },
+        {
+          id: "tambosConProblemas",
+          label: "¿Cuántos tambos presentaron problemas?",
+          type: "number",
+          min: 0,
+          showIf: (v) => v.todosLlenadosBien === false,
+          required: true,
+        },
       ],
     },
     {
-      id: "actividades-mensuales",
-      title: "Actividades mensuales",
+      id: "muestreo",
+      title: "Muestreo",
       fields: [
-        { id: "conveyorLimpio", label: "¿Se limpió el conveyor?", type: "boolean", required: true },
-        { id: "tornillosInspeccionados", label: "¿Se inspeccionaron tornillos y abrazaderas?", type: "boolean", required: true },
+        { id: "seTomoMuestra", label: "¿Se tomó muestra?", type: "boolean", required: true },
+        { id: "numeroMuestra", label: "Número de muestra", type: "auto-number", showIf: (v) => v.seTomoMuestra === true },
       ],
     },
     {
-      id: "condicion-equipo",
-      title: "Condición del equipo",
+      id: "observaciones",
+      title: "Observaciones",
       fields: [
-        { id: "estadoGeneralMixer", label: "Estado general del mixer", type: "select", options: ESTADO_4, required: true },
-        { id: "anomaliaDetectada", label: "¿Se detectó alguna anomalía?", type: "boolean", required: true },
+        { id: "anomalia", label: "¿Se presentó alguna anomalía durante el llenado?", type: "boolean", required: true },
         {
           id: "tipoAnomalia",
           label: "Tipo de anomalía",
           type: "select",
-          options: ["Vibración", "Ruido", "Fuga", "Desgaste", "Tornillo flojo", "Corrosión", "Otro"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.anomaliaDetectada === true,
+          options: ["Derrame", "Fuga", "Problema en bomba", "Problema en manguera", "Tambo dañado", "Otro"].map((v) => ({ value: v, label: v })),
+          showIf: (v) => v.anomalia === true,
           required: true,
         },
         {
@@ -78,22 +100,7 @@ export const po08: ReportDef = {
           showIf: (v) => v.tipoAnomalia === "Otro",
           required: true,
         },
-      ],
-    },
-    {
-      id: "acciones-correctivas",
-      title: "Acciones correctivas",
-      fields: [
-        { id: "mantenimientoNecesario", label: "¿Fue necesario realizar mantenimiento?", type: "boolean", required: true },
-        {
-          id: "tipoMantenimiento",
-          label: "Tipo de mantenimiento",
-          type: "select",
-          options: ["Correctivo", "Preventivo", "Urgente"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.mantenimientoNecesario === true,
-          required: true,
-        },
-        { id: "reportadoMantenimiento", label: "¿Se reportó al área de mantenimiento?", type: "boolean", required: true },
+        { id: "evidenciaFoto", label: "Evidencia fotográfica", type: "photo" },
         { id: "comentarios", label: "Comentarios", type: "textarea" },
       ],
     },

@@ -1,11 +1,9 @@
 import { ReportDef } from "../types";
-import { LIST, ESTADO_4, TANQUES_ALMACENAMIENTO } from "../options";
-
-const VOLUMEN_PORRON = 20;
+import { LIST, TANQUES_ALMACENAMIENTO } from "../options";
 
 export const po07: ReportDef = {
   code: "PO-07",
-  title: "Reporte llenado de porrón",
+  title: "Reporte de envasado de tote (IBC)",
   category: "operacion",
   sections: [
     {
@@ -20,29 +18,29 @@ export const po07: ReportDef = {
       ],
     },
     {
-      id: "inspeccion-porron",
-      title: "Inspección del porrón",
+      id: "sellado",
+      title: "Sellado",
       fields: [
-        { id: "limpioExterno", label: "¿El porrón está limpio externamente?", type: "boolean", required: true },
-        { id: "limpioInterno", label: "¿El porrón está limpio internamente?", type: "boolean", required: true },
-        { id: "estadoGeneral", label: "Estado general del porrón", type: "select", options: ESTADO_4, required: true },
-        { id: "presentaDanos", label: "¿El porrón presenta daños?", type: "boolean", required: true },
-        {
-          id: "tipoDano",
-          label: "Tipo de daño",
-          type: "select",
-          options: ["Grieta", "Golpe", "Deformación", "Rosca dañada", "Otro"].map((v) => ({ value: v, label: v })),
-          showIf: (v) => v.presentaDanos === true,
-          required: true,
-        },
-        {
-          id: "tipoDanoOtro",
-          label: "¿Cuál?",
-          type: "text",
-          showIf: (v) => v.tipoDano === "Otro",
-          required: true,
-        },
-        { id: "tapaBuenEstado", label: "¿La tapa está en buen estado?", type: "boolean", required: true },
+        { id: "numeroSello1", label: "Número de sello 1", type: "text" },
+        { id: "numeroSello2", label: "Número de sello 2", type: "text" },
+        { id: "numeroSello3", label: "Número de sello 3", type: "text" },
+        { id: "numeroSello4", label: "Número de sello 4", type: "text" },
+        { id: "numeroSello5", label: "Número de sello 5", type: "text" },
+        { id: "numeroSello6", label: "Número de sello 6", type: "text" },
+        { id: "selloColocadoBien", label: "¿Los sellos quedaron correctamente colocados?", type: "boolean", required: true },
+      ],
+    },
+    {
+      // Un mismo envasado puede repartirse entre varios clientes, cada uno
+      // con su cantidad y su orden de venta: se captura como lista para no
+      // obligar a llenar un reporte por destino.
+      id: "clientes",
+      title: "Clientes",
+      repetible: { agregar: "Agregar cliente", singular: "Cliente", minimo: 1 },
+      fields: [
+        { id: "cliente", label: "Cliente", type: "master-select", listKey: LIST.clientes, required: true },
+        { id: "totesEntregados", label: "Totes entregados", type: "number", min: 0, required: true },
+        { id: "ordenVenta", label: "Orden de venta", type: "master-select", listKey: LIST.ordenesVenta, required: true },
       ],
     },
     {
@@ -50,22 +48,30 @@ export const po07: ReportDef = {
       title: "Llenado",
       fields: [
         {
-          // Los porrones son de 20 L; el dato viene del envase, no se mide.
-          id: "volumenPorPorron",
-          label: "Volumen por porrón",
-          type: "calculated",
-          calculate: () => VOLUMEN_PORRON,
-        },
-        { id: "numeroPorronesLlenados", label: "Número de porrones llenados", type: "number", min: 0, required: true },
-        { id: "todosLlenadosBien", label: "¿Todos los porrones fueron llenados correctamente?", type: "boolean", required: true },
-        {
-          id: "porronesConProblemas",
-          label: "¿Cuántos presentaron problemas?",
-          type: "number",
-          min: 0,
-          showIf: (v) => v.todosLlenadosBien === false,
+          // El mismo tote sirve para DEF o para agua, y viene en dos
+          // capacidades: ambas cosas cambian qué se despachó, así que se
+          // registran en vez de asumirse.
+          id: "contenido",
+          label: "Contenido",
+          type: "select",
+          options: [
+            { value: "DEF (urea)", label: "DEF (urea)" },
+            { value: "Agua", label: "Agua" },
+          ],
           required: true,
         },
+        {
+          id: "volumenPorTote",
+          label: "Volumen por tote",
+          type: "select",
+          options: [
+            { value: "1000", label: "1000 L" },
+            { value: "1200", label: "1200 L" },
+          ],
+          required: true,
+        },
+        { id: "numeroTotesLlenados", label: "Número de totes llenados", type: "number", min: 0, required: true },
+        { id: "todosLlenadosBien", label: "¿Todos los totes fueron llenados correctamente?", type: "boolean", required: true },
       ],
     },
     {
@@ -85,7 +91,7 @@ export const po07: ReportDef = {
           id: "tipoAnomalia",
           label: "Tipo de anomalía",
           type: "select",
-          options: ["Derrame", "Fuga", "Problema en bomba", "Problema en manguera", "Porrón dañado", "Otro"].map((v) => ({ value: v, label: v })),
+          options: ["Derrame", "Problema en bomba", "Problema en válvula", "IBC dañado", "Fuga", "Otro"].map((v) => ({ value: v, label: v })),
           showIf: (v) => v.anomalia === true,
           required: true,
         },
